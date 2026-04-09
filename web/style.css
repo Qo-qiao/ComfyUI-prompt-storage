@@ -1,0 +1,1297 @@
+/* 基础样式 */
+:root {
+    --vl-bg: #222;
+    --vl-card-bg: #333;
+    --vl-card-border: transparent;
+    --vl-card-selected: #4AF;
+    --vl-card-selected-video: #4AF;
+    --vl-text: #ddd;
+    --vl-text-muted: #999;
+    --vl-border: #444;
+    --vl-btn-bg: #444;
+    --vl-btn-hover: #555;
+    --vl-btn-active: #666;
+    --vl-btn-primary: #2a6;
+    --vl-btn-primary-hover: #3b7;
+    --vl-input-bg: #333;
+    --vl-input-border: #444;
+    --vl-input-focus: #4AF;
+    --vl-search-bg: #000;
+    --vl-search-border: #444;
+    --vl-search-focus: #4AF;
+    --vl-overlay: rgba(0, 0, 0, 0.85);
+    --vl-modal-bg: #1e1e1e;
+    --vl-modal-border: #333;
+}
+
+/* 容器样式 */
+.visual-loader-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    display: flex;
+    flex-direction: column;
+    background: #222;
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 10px;
+    box-sizing: border-box;
+    color: #ddd;
+    font-family: Arial, sans-serif;
+    gap: 10px;
+    z-index: 1;
+    height: calc(100% - 20px);
+}
+
+/* 头部样式 */
+.vl-header { 
+    display: flex; 
+    gap: 8px; 
+    flex-shrink: 0; 
+    height: 28px; 
+    min-height: 28px; 
+    align-items: center;
+}
+
+.vl-header .vl-category-container {
+    flex: 0 0 auto;
+    min-width: 100px;
+    max-width: 160px;
+}
+
+.vl-header .vl-search-wrapper {
+    flex: 1;
+    min-width: 180px;
+}
+
+.vl-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 分类和文件类型选择器统一样式 */
+.vl-category-container,
+.vl-file-type-container {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.vl-category-button,
+.vl-file-type-button {
+    height: 28px;
+    background: #333;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 0 8px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    transition: all 0.2s ease;
+    min-width: 65px;
+}
+
+.vl-category-button:hover,
+.vl-file-type-button:hover {
+    background: #444;
+    border-color: #555;
+}
+
+.vl-category-button:active,
+.vl-file-type-button:active {
+    background: #3a3a3a;
+}
+
+.vl-category-icon,
+.vl-file-type-icon {
+    font-size: 12px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.vl-category-text,
+.vl-file-type-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    flex: 1;
+}
+
+/* 下拉菜单统一样式 */
+.vl-category-dropdown,
+.vl-file-type-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    border-top: none;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    max-height: 300px;
+    overflow-y: auto;
+    min-width: 100%;
+}
+
+.vl-category-dropdown.show,
+.vl-file-type-dropdown.show {
+    display: block;
+}
+
+.vl-category-option,
+.vl-file-type-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 12px;
+    white-space: nowrap;
+    color: #ddd;
+}
+
+.vl-category-option:hover,
+.vl-file-type-option:hover {
+    background: #444;
+}
+
+.vl-category-option:first-child,
+.vl-file-type-option:first-child {
+    border-radius: 4px 4px 0 0;
+}
+
+.vl-category-option:last-child,
+.vl-file-type-option:last-child {
+    border-radius: 0 0 4px 4px;
+}
+
+/* 搜索框样式 */
+.vl-search-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 28px;
+}
+
+.vl-search {
+    flex: 1;
+    height: 100%;
+    background: #000;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #fff;
+    padding: 0 12px;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.vl-search:hover {
+    border-color: #555;
+}
+
+.vl-search:focus {
+    border-color: #4AF;
+}
+
+.vl-search::placeholder {
+    color: #555;
+}
+
+/* 视图切换按钮 */
+.vl-view-toggle-container {
+    flex-shrink: 0;
+    display: flex;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #444;
+    margin-left: 8px;
+}
+
+.vl-view-toggle-btn {
+    width: 30px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    padding: 0;
+    border-left: 1px solid #444;
+}
+
+.vl-view-toggle-btn:first-child {
+    border-left: none;
+}
+
+.vl-view-toggle-btn:hover {
+    background: #444;
+    color: #aaa;
+}
+
+.vl-view-toggle-btn.active {
+    background: #444;
+    color: #4AF;
+}
+
+.vl-file-type-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    border-top: none;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    max-height: 300px;
+    overflow-y: auto;
+    min-width: 100%;
+}
+
+.vl-file-type-dropdown.show {
+    display: block;
+}
+
+.vl-file-type-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.vl-file-type-option:hover {
+    background: #444;
+}
+
+.vl-file-type-option:first-child {
+    border-radius: 4px 4px 0 0;
+}
+
+.vl-file-type-option:last-child {
+    border-radius: 0 0 4px 4px;
+}
+
+/* 分类选择器样式 */
+.vl-category-container {
+    position: relative;
+    width: auto;
+    min-width: 100px;
+    max-width: 200px;
+    height: 100%;
+    flex: 1;
+}
+
+.vl-category-button {
+    width: 100%;
+    height: 100%;
+    background: #333;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 0 8px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.vl-category-button:hover {
+    background: #444;
+    border-color: #555;
+}
+
+.vl-category-icon {
+    display: inline-block;
+    font-size: 14px;
+}
+
+.vl-category-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.vl-category-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    border-top: none;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    max-height: 300px;
+    overflow-y: auto;
+    min-width: 100%;
+}
+
+.vl-category-dropdown.show {
+    display: block;
+}
+
+.vl-category-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.vl-category-option:hover {
+    background: #444;
+}
+
+.vl-category-option:first-child {
+    border-radius: 4px 4px 0 0;
+}
+
+.vl-category-option:last-child {
+    border-radius: 0 0 4px 4px;
+}
+
+/* 信息栏样式 */
+.vl-info-bar {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    color: #fff;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: 1px solid #3a3a3a;
+    cursor: default;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 0 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.vl-info-bar:hover {
+    border-color: #4a4a4a;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 网格样式 */
+.vl-grid {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-auto-rows: max-content;
+    gap: 10px;
+    padding: 12px 8px 8px 8px;
+    border-top: 1px solid #3a3a3a;
+}
+
+.vl-grid.list-mode {
+    grid-template-columns: 1fr;
+    gap: 6px;
+}
+
+.vl-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.vl-grid::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.vl-grid::-webkit-scrollbar-thumb {
+    background: #5a5a5a;
+    border-radius: 4px;
+}
+
+.vl-grid::-webkit-scrollbar-thumb:hover {
+    background: #6a6a6a;
+}
+
+/* 列表模式项样式 */
+.vl-list-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+    border: 2px solid #4a4a4a;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 70px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.vl-list-item:hover {
+    background: linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%);
+    border-color: #5a5a5a;
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.vl-list-item.selected {
+    background: linear-gradient(135deg, #2a6 0%, #3b7 100%);
+    border-color: #4c8;
+    box-shadow: 0 0 16px rgba(68, 204, 136, 0.5);
+}
+
+.vl-list-item.selected .vl-list-item-name {
+    color: #fff;
+}
+
+.vl-list-item-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.vl-list-item-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.vl-list-item-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vl-list-item-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #eee;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 元信息容器 */
+.vl-list-item-meta-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 滚动标签容器 */
+.vl-list-item-scroll-container {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    flex: 1;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    min-width: max-content;
+    z-index: 1;
+    margin-left: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    max-width: calc(100% - 94px); /* 80px + 14px gap */
+}
+
+/* 风格标签 */
+.vl-list-item-style {
+    flex-shrink: 0;
+    z-index: 2;
+    position: relative;
+}
+
+/* 标签容器 */
+.vl-list-item-tags {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    min-width: max-content;
+    animation-play-state: paused;
+}
+
+/* 单个标签样式 */
+.vl-list-item-tag {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #888;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.3s ease;
+}
+
+/* 鼠标悬停效果 */
+.vl-list-item:hover .vl-list-item-tags {
+    animation: scroll-left 8s linear infinite;
+    animation-play-state: running;
+}
+
+@keyframes scroll-left {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* 为列表项添加悬停效果 */
+.vl-list-item:hover .vl-list-item-tag {
+    background: #3a3a3a;
+    border-color: #4a4a4a;
+}
+
+.vl-list-item-type {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #3a3a3a;
+}
+
+.vl-list-item-type-icon {
+    font-size: 13px;
+}
+
+/* 列表项风格标签 */
+.vl-list-item-style {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #888;
+    padding: 3px 8px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #3a3a3a;
+}
+
+.vl-list-item-style-icon {
+    font-size: 14px;
+}
+
+/* 列表项模型标签 */
+.vl-list-item-model {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #888;
+    padding: 3px 8px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #3a3a3a;
+}
+
+.vl-list-item-model-icon {
+    font-size: 14px;
+}
+
+/* 卡片模型标签 */
+.vl-model-badge {
+    position: absolute;
+    bottom: 20px;
+    left: 5px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 8px;
+    max-width: calc(100% - 10px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 5;
+}
+
+/* 提示词卡片容器 */
+.vl-prompt-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.vl-prompt-cards-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.vl-prompt-cards-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vl-prompt-cards-container::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 2px;
+}
+
+/* 提示词卡片 */
+.vl-prompt-card {
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 6px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.vl-prompt-card:hover {
+    background: #333;
+    border-color: #666;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 正向提示词卡片选中 */
+.vl-prompt-card[data-prompt-type="positive"].selected {
+    background: #2a6;
+    border-color: #4c8;
+    box-shadow: 0 0 12px rgba(68, 204, 136, 0.4);
+}
+
+/* 负向提示词卡片选中 */
+.vl-prompt-card[data-prompt-type="negative"].selected {
+    background: #a22;
+    border-color: #c44;
+    box-shadow: 0 0 12px rgba(204, 68, 68, 0.4);
+}
+
+.vl-prompt-card.selected .vl-prompt-card-content {
+    color: #fff;
+}
+
+.vl-prompt-card-content {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #eee;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.vl-prompt-card-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.vl-prompt-card-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vl-prompt-card-content::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 2px;
+}
+
+/* 卡片样式 */
+.vl-card {
+    position: relative;
+    background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    aspect-ratio: 1 / 1;
+    border: 2px solid transparent;
+    z-index: 1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.vl-card:hover {
+    filter: brightness(1.15);
+    transform: translateY(-4px) scale(1.03);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.vl-card.selected {
+    border-color: #4AF;
+    box-shadow: 0 0 16px rgba(68, 170, 255, 0.5), 0 8px 16px rgba(0, 0, 0, 0.4);
+    transform: translateY(-4px) scale(1.03);
+    z-index: 2;
+}
+
+/* 视频卡片样式 */
+.vl-card.video {
+    border-color: transparent;
+}
+
+.vl-card.video:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.vl-card.video.selected {
+    border-color: #4AF;
+    box-shadow: 0 0 16px rgba(68, 170, 255, 0.5), 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* 视频标识 */
+.vl-video-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, rgba(68, 170, 255, 0.95) 0%, rgba(58, 140, 235, 0.95) 100%);
+    color: white;
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 6px;
+    font-weight: 600;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+/* 卡片图片样式 */
+.vl-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.vl-card:hover img {
+    transform: scale(1.05);
+}
+
+/* 卡片标签样式 */
+.vl-card-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    color: #eee;
+    font-size: 10px;
+    padding: 4px 2px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 底部按钮样式 */
+.vl-footer {
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.vl-btn {
+    flex: 1;
+    background: #444;
+    color: #eee;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 16px;
+    min-height: 36px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vl-btn:hover:not(:disabled) {
+    background: #555;
+    transform: translateY(-1px);
+}
+
+.vl-btn:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.vl-btn.primary {
+    background: #2a6;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(34, 170, 102, 0.2);
+}
+
+.vl-btn.primary:hover:not(:disabled) {
+    background: #3b7;
+    box-shadow: 0 3px 6px rgba(34, 170, 102, 0.3);
+}
+
+/* 中间按钮样式 */
+.vl-middle-btns {
+    display: flex;
+    gap: 8px;
+    padding: 0 8px;
+}
+
+/* 预览模态框样式 */
+.vl-preview-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--vl-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.vl-preview-modal {
+    display: flex;
+    width: 95%;
+    max-width: 1200px;
+    height: 70vh;
+    max-height: 800px;
+    background: var(--vl-modal-bg);
+    border: 1px solid var(--vl-modal-border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* 预览左侧区域 */
+.vl-preview-left {
+    flex: 2;
+    min-width: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: #111;
+    padding: 20px;
+}
+
+.vl-preview-media-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vl-preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+/* 左右切换按钮 */
+.vl-nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 100;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.vl-nav-button:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.vl-nav-button:active:not(:disabled) {
+    transform: translateY(-50%) scale(1.05);
+}
+
+.vl-nav-button:disabled {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.2);
+    cursor: not-allowed;
+}
+
+.vl-prev-button {
+    left: 20px;
+}
+
+.vl-next-button {
+    right: 20px;
+}
+
+/* 视频覆盖层 */
+.vl-video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.vl-video-overlay:hover {
+    opacity: 1;
+}
+
+/* 播放按钮 */
+.vl-play-button {
+    width: 80px;
+    height: 80px;
+    background: rgba(52, 152, 219, 0.8);
+    border: 3px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 32px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    transform: translateX(4px);
+}
+
+.vl-play-button:hover {
+    background: rgba(52, 152, 219, 1);
+    transform: translateX(4px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+/* 预览右侧区域 */
+.vl-preview-right {
+    flex: 3;
+    min-width: 500px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 预览头部 */
+.vl-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: var(--vl-card-bg);
+    border-bottom: 1px solid var(--vl-border);
+}
+
+.vl-preview-header h3 {
+    margin: 0;
+    color: var(--vl-text);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.vl-preview-header-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.vl-preview-close {
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    color: var(--vl-text);
+    font-size: 24px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.vl-preview-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* 预览内容 */
+.vl-preview-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    background: var(--vl-bg);
+}
+
+/* 信息区块 */
+.vl-info-section {
+    margin-bottom: 16px;
+}
+
+.vl-info-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--vl-text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 2px;
+}
+
+.vl-info-value {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--vl-input-bg);
+    border: 1px solid var(--vl-input-border);
+    border-radius: 4px;
+    color: var(--vl-text);
+    font-size: 13px;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.vl-info-value:focus {
+    border-color: var(--vl-input-focus);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(76, 175, 80, 0.2);
+    outline: none;
+}
+
+/* 文本域样式 */
+.vl-info-value[type="textarea"],
+.vl-info-prompt-positive,
+.vl-info-prompt-negative,
+.vl-info-civitai,
+.vl-info-lora {
+    height: 80px;
+    resize: vertical;
+    min-height: 60px;
+    max-height: 150px;
+    font-family: inherit;
+}
+
+/* 输入框样式 */
+.vl-info-filename-input,
+.vl-info-model-input {
+    height: 36px;
+}
+
+/* 预览文本样式 */
+.vl-info-text {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    word-break: break-all;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    padding: 0 12px;
+}
+
+/* 正向提示词预览项样式 */
+.vl-info-prompt-preview-item {
+    min-height: 60px;
+    max-height: 150px;
+    overflow-y: auto;
+    word-break: break-all;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    padding: 8px 10px;
+}
+
+/* 提示信息 */
+.vl-info-hint {
+    font-size: 10px;
+    color: var(--vl-text-muted);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* 预览底部 */
+.vl-preview-footer {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px 16px 16px;
+    background: var(--vl-card-bg);
+    border-top: 1px solid var(--vl-border);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .vl-preview-modal {
+        flex-direction: column;
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    .vl-preview-left {
+        max-width: none;
+        max-height: 300px;
+    }
+    
+    .vl-preview-right {
+        max-height: 50vh;
+    }
+}
+
+/* 加载动画 */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.vl-loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* 保存按钮状态 */
+.vl-btn.saving {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* 成功提示 */
+.vl-success {
+    color: var(--vl-btn-primary) !important;
+}
+
+/* 错误提示 */
+.vl-error {
+    color: #f44336 !important;
+}
+
+/* 分类选择器和文件类型选择器的选项样式 */
+.vl-category option,
+.vl-file-type option {
+    background: var(--vl-bg);
+    color: var(--vl-text);
+}
+
+/* 确保在深色模式下的可读性 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --vl-bg: #121212;
+        --vl-card-bg: #1e1e1e;
+        --vl-card-border: #333;
+        --vl-text: #e0e0e0;
+        --vl-text-muted: #999;
+        --vl-border: #333;
+    }
+}
+
+/* 确保在浅色模式下的可读性 */
+@media (prefers-color-scheme: light) {
+    :root {
+        --vl-bg: #f5f5f5;
+        --vl-card-bg: #ffffff;
+        --vl-card-border: #ddd;
+        --vl-text: #333333;
+        --vl-text-muted: #666666;
+        --vl-border: #ddd;
+        --vl-btn-bg: #f0f0f0;
+        --vl-btn-hover: #e0e0e0;
+        --vl-btn-active: #d0d0d0;
+        --vl-input-bg: #ffffff;
+        --vl-input-border: #ddd;
+        --vl-search-bg: #ffffff;
+        --vl-search-border: #ddd;
+        --vl-overlay: rgba(0, 0, 0, 0.7);
+        --vl-modal-bg: #ffffff;
+        --vl-modal-border: #ddd;
+    }
+}
+
+/* 调整大小手柄样式 */
+.vl-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 15px;
+    height: 15px;
+    background: var(--vl-modal-border);
+    cursor: nwse-resize;
+    border-top-left-radius: 4px;
+    border-bottom: 2px solid var(--vl-modal-border);
+    border-right: 2px solid var(--vl-modal-border);
+    z-index: 10;
+}
+
+/* 调整大小手柄的悬停效果 */
+.vl-resize-handle:hover {
+    background: var(--vl-btn-primary);
+}
