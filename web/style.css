@@ -4,7 +4,6 @@
     --vl-card-bg: #333;
     --vl-card-border: transparent;
     --vl-card-selected: #4AF;
-    --vl-card-selected-video: #4AF;
     --vl-text: #ddd;
     --vl-text-muted: #999;
     --vl-border: #444;
@@ -762,37 +761,6 @@
     z-index: 2;
 }
 
-/* 视频卡片样式 */
-.vl-card.video {
-    border-color: transparent;
-}
-
-.vl-card.video:hover {
-    border-color: rgba(255, 255, 255, 0.15);
-}
-
-.vl-card.video.selected {
-    border-color: #4AF;
-    box-shadow: 0 0 16px rgba(68, 170, 255, 0.5), 0 8px 16px rgba(0, 0, 0, 0.4);
-}
-
-/* 视频标识 */
-.vl-video-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: linear-gradient(135deg, rgba(68, 170, 255, 0.95) 0%, rgba(58, 140, 235, 0.95) 100%);
-    color: white;
-    font-size: 10px;
-    padding: 3px 7px;
-    border-radius: 6px;
-    font-weight: 600;
-    z-index: 10;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-}
-
 /* 卡片图片样式 */
 .vl-card img {
     width: 100%;
@@ -997,48 +965,6 @@
     right: 20px;
 }
 
-/* 视频覆盖层 */
-.vl-video-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.8;
-    transition: opacity 0.3s ease;
-}
-
-.vl-video-overlay:hover {
-    opacity: 1;
-}
-
-/* 播放按钮 */
-.vl-play-button {
-    width: 80px;
-    height: 80px;
-    background: rgba(52, 152, 219, 0.8);
-    border: 3px solid white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 32px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    transform: translateX(4px);
-}
-
-.vl-play-button:hover {
-    background: rgba(52, 152, 219, 1);
-    transform: translateX(4px) scale(1.05);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
-}
-
 /* 预览右侧区域 */
 .vl-preview-right {
     flex: 3;
@@ -1136,7 +1062,6 @@
 .vl-info-value[type="textarea"],
 .vl-info-prompt-positive,
 .vl-info-prompt-negative,
-.vl-info-civitai,
 .vl-info-lora {
     height: 80px;
     resize: vertical;
@@ -1276,22 +1201,101 @@
     }
 }
 
-/* 调整大小手柄样式 */
-.vl-resize-handle {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 15px;
-    height: 15px;
-    background: var(--vl-modal-border);
-    cursor: nwse-resize;
-    border-top-left-radius: 4px;
-    border-bottom: 2px solid var(--vl-modal-border);
-    border-right: 2px solid var(--vl-modal-border);
-    z-index: 10;
+/* 卡片悬停提示框样式 */
+.vl-card-tooltip {
+    position: fixed;
+    z-index: 10000;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 1px solid #4a4a4a;
+    border-radius: 10px;
+    padding: 12px 16px;
+    max-width: 400px;
+    min-width: 280px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-family: Arial, sans-serif;
 }
 
-/* 调整大小手柄的悬停效果 */
-.vl-resize-handle:hover {
-    background: var(--vl-btn-primary);
+.vl-card-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #2a2a2a;
+}
+
+.vl-card-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 9px solid #4a4a4a;
+}
+
+.vl-tooltip-section {
+    margin-bottom: 10px;
+}
+
+.vl-tooltip-section:last-child {
+    margin-bottom: 0;
+}
+
+.vl-tooltip-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.vl-tooltip-text {
+    font-size: 12px;
+    color: #e0e0e0;
+    line-height: 1.4;
+    max-height: 60px;
+    overflow-y: auto;
+    word-break: break-word;
+}
+
+.vl-tooltip-text::-webkit-scrollbar {
+    width: 4px;
+}
+
+.vl-tooltip-text::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vl-tooltip-text::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 2px;
+}
+
+.vl-tooltip-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #3a3a3a;
+}
+
+.vl-tooltip-meta-item {
+    background: #333;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: #aaa;
+}
+
+.vl-tooltip-meta-label {
+    color: #666;
 }

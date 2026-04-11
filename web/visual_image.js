@@ -39,7 +39,6 @@ const translations = {
         uncategorized: '未分类',
         filename: '文件名',
         fileType: '文件类型',
-        coverImage: '封面图',
         style: '风格',
         checkpoints: '大模型',
         lora: 'LORA',
@@ -56,7 +55,6 @@ const translations = {
         copyPositivePrompt: '复制正向提示词',
         addPositivePrompt: '添加正向提示词',
         enterFilename: '输入文件名...',
-        enterCoverImage: '输入封面图 URL...',
         enterStyle: '输入风格...',
         enterCheckpoint: '输入检查点名称...',
         enterLora: '输入 LoRA 信息，格式：lora_name:weight...',
@@ -88,7 +86,6 @@ const translations = {
         uncategorized: 'Uncategorized',
         filename: 'Filename',
         fileType: 'File Type',
-        coverImage: 'Cover Image',
         style: 'Style',
         checkpoints: 'Checkpoints',
         lora: 'LoRA',
@@ -105,7 +102,6 @@ const translations = {
         copyPositivePrompt: 'Copy Positive Prompt',
         addPositivePrompt: 'Add Positive Prompt',
         enterFilename: 'Enter filename...',
-        enterCoverImage: 'Enter cover image URL...',
         enterStyle: 'Enter style...',
         enterCheckpoint: 'Enter checkpoint name...',
         enterLora: 'Enter LoRA info, format: lora_name:weight...',
@@ -358,31 +354,76 @@ class UI {
             ph.innerHTML = "🖼️";
             card.appendChild(ph);
         }
-
-        // 添加风格标签
-        const styleText = item.style || item.category;
-        if (styleText) {
-            const styleBadge = document.createElement("div");
-            styleBadge.className = "vl-style-badge";
-            styleBadge.innerText = styleText;
-            card.appendChild(styleBadge);
-        }
         
-        // 添加大模型标签
-        const modelText = item.checkpoints || item.model;
-        if (modelText) {
-            const modelBadge = document.createElement("div");
-            modelBadge.className = "vl-model-badge";
-            modelBadge.innerText = modelText;
-            card.appendChild(modelBadge);
-        }
-
         const title = document.createElement("div");
         title.className = "vl-card-title";
         // 优先显示 display_filename（修改后的文件名），如果没有则显示原始文件名
         const displayName = item.display_filename || (item.name ? item.name.split(/[/\\]/).pop() : '');
         title.innerText = displayName;
         card.appendChild(title);
+
+        // 添加悬停提示框
+        card.addEventListener("mouseenter", (e) => {
+            const tooltip = document.createElement("div");
+            tooltip.className = "vl-card-tooltip";
+            tooltip.id = "vl-card-tooltip-" + Date.now();
+
+            const promptPositive = item.prompt_positive || '';
+            const promptNegative = item.prompt_negative || '';
+            const styleText = item.style || item.category || '';
+            const checkpointsText = item.checkpoints || item.model || '';
+            const loraText = item.lora || '';
+            const samplerText = item.sampler || '';
+            const schedulerText = item.scheduler || '';
+            const stepsText = item.steps || '';
+            const cfgText = item.cfg || '';
+
+            let tooltipContent = `<div class="vl-tooltip-section"><div class="vl-tooltip-title">${t('positivePrompt')}</div><div class="vl-tooltip-text">${promptPositive || t('none')}</div></div>`;
+            tooltipContent += `<div class="vl-tooltip-section"><div class="vl-tooltip-title">${t('negativePrompt')}</div><div class="vl-tooltip-text">${promptNegative || t('none')}</div></div>`;
+
+            const metaItems = [];
+            if (styleText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('style')}:</span> ${styleText}</span>`);
+            if (checkpointsText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('checkpoints')}:</span> ${checkpointsText}</span>`);
+            if (loraText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('lora')}:</span> ${loraText}</span>`);
+            if (samplerText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('sampler')}:</span> ${samplerText}</span>`);
+            if (schedulerText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('scheduler')}:</span> ${schedulerText}</span>`);
+            if (stepsText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('steps')}:</span> ${stepsText}</span>`);
+            if (cfgText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('cfg')}:</span> ${cfgText}</span>`);
+
+            if (metaItems.length > 0) {
+                tooltipContent += `<div class="vl-tooltip-meta">${metaItems.join('')}</div>`;
+            }
+
+            tooltip.innerHTML = tooltipContent;
+            document.body.appendChild(tooltip);
+
+            const rect = card.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+
+            let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+            let top = rect.top - tooltipRect.height - 10;
+
+            if (left < 10) left = 10;
+            if (left + tooltipRect.width > window.innerWidth - 10) {
+                left = window.innerWidth - tooltipRect.width - 10;
+            }
+            if (top < 10) {
+                top = rect.bottom + 10;
+            }
+
+            tooltip.style.left = left + "px";
+            tooltip.style.top = top + "px";
+            tooltip.style.opacity = "1";
+
+            card._tooltipElement = tooltip;
+        });
+
+        card.addEventListener("mouseleave", () => {
+            if (card._tooltipElement) {
+                card._tooltipElement.remove();
+                card._tooltipElement = null;
+            }
+        });
 
         return card;
     }
@@ -590,6 +631,9 @@ class UI {
         img.style.transition = "transform 0.2s ease";
         img.style.cursor = "zoom-in";
 
+        // 将图片添加到媒体容器
+        mediaContainer.appendChild(img);
+
         // 当前索引和切换函数
         let currentIndex = -1;
         let prevBtn = null;
@@ -723,25 +767,16 @@ class UI {
 
         }
 
-        // 构建原始图片的 URL，而不是使用缓存的 URL
+        // 构建原始图片的 URL
         let absoluteUrl = window.location.origin + `/view?filename=${encodeURIComponent(filename)}&type=output`;
 
-        // 检查缓存
-        const cacheKey = filename || absoluteUrl;
-        const cachedUrl = imageCacheManager.getCachedUrl(cacheKey);
-
-        console.log('[ImagePreview] Loading image (original):', absoluteUrl, 'Cached URL:', cachedUrl);
-        // 优先使用缓存的 URL
-        const urlToUse = cachedUrl || absoluteUrl;
-        img.src = urlToUse;
+        console.log('[ImagePreview] Loading image (original):', absoluteUrl);
+        // 详情页始终使用原始图片 URL
+        img.src = absoluteUrl;
         img.alt = filename;
 
         img.onload = () => {
             console.log('[ImagePreview] Image loaded successfully:', absoluteUrl);
-            // 只有在使用非缓存 URL 时才更新缓存
-            if (!cachedUrl) {
-                imageCacheManager.cacheUrl(cacheKey, absoluteUrl);
-            }
             // 隐藏占位符，显示图片
             if (loadingPlaceholder) {
                 loadingPlaceholder.style.display = "none";
@@ -838,12 +873,6 @@ class UI {
             <div class="vl-info-section">
                 <div class="vl-info-label">${t('fileType')}</div>
                 <div class="vl-info-value vl-info-type" id="vl-filetype">${t('loading')}</div>
-            </div>
-            <div class="vl-info-section" id="vl-cover-section" style="display: none;">
-                <div class="vl-info-label">${t('coverImage')}</div>
-                <div class="vl-info-value vl-info-text" id="vl-cover-preview"></div>
-                <input type="text" class="vl-info-value vl-info-cover-input" id="vl-cover" placeholder="${t('enterCoverImage')}" value="" style="display: none;" />
-                <div class="vl-info-hint" id="vl-cover-hint" style="display: none;">${t('enterCoverImage')}</div>
             </div>
             <div class="vl-info-section">
                 <div class="vl-info-label">${t('style')}</div>
@@ -1193,14 +1222,6 @@ class UI {
                 });
             }
             
-            // 切换封面图片
-            const coverInput = document.getElementById('vl-cover');
-            const coverPreview = document.getElementById('vl-cover-preview');
-            const coverHint = document.getElementById('vl-cover-hint');
-            if (coverInput) coverInput.style.display = display;
-            if (coverPreview) coverPreview.style.display = displayText;
-            if (coverHint) coverHint.style.display = display;
-            
             // 切换风格类型
             const styleInput = document.getElementById('vl-style');
             const stylePreview = document.getElementById('vl-style-preview');
@@ -1299,16 +1320,15 @@ class UI {
                 // 收集所有非空的负向提示词
                 const promptNegativeElements = document.querySelectorAll('[id^="vl-prompt-negative-"]');
                 const promptNegativeText = Array.from(promptNegativeElements).map(element => element.value || '').filter(text => text.trim() !== '').join(' ');
-                const coverText = document.getElementById('vl-cover').value;
                 const samplerText = document.getElementById('vl-sampler').value;
                 const schedulerText = document.getElementById('vl-scheduler').value;
                 const stepsText = document.getElementById('vl-steps').value;
                 const cfgText = document.getElementById('vl-cfg').value;
-                
+
                 // 显示保存状态
                 editSaveBtn.innerText = t('saving');
                 editSaveBtn.disabled = true;
-                
+
                 try {
                     const currentPath = node.widgets?.[0]?.value || folder_paths.get_output_directory();
                 const response = await api.fetchApi('/comfyui-image-prompt/save-image-info', {
@@ -1325,7 +1345,6 @@ class UI {
                             lora: loraText,
                             prompt_positive: promptPositiveTexts,
                             prompt_negative: promptNegativeText,
-                            cover_image: coverText,
                             sampler: samplerText,
                             scheduler: schedulerText,
                             steps: stepsText,
@@ -1333,21 +1352,19 @@ class UI {
                             path: currentPath
                         })
                     });
-                    
+
                     if (response.ok) {
                         // 更新预览文本
                         const filenamePreview = document.getElementById('vl-filename-preview');
                         const stylePreview = document.getElementById('vl-style-preview');
                         const checkpointsPreview = document.getElementById('vl-checkpoints-preview');
                         const loraPreview = document.getElementById('vl-lora-preview');
-                        const coverPreview = document.getElementById('vl-cover-preview');
                         const promptNegativePreview = document.getElementById('vl-prompt-negative-preview');
-                        
+
                         if (filenamePreview) filenamePreview.innerText = filenameInput.value || t('none');
                         if (stylePreview) stylePreview.innerText = styleText || t('none');
                         if (checkpointsPreview) checkpointsPreview.innerText = modelText || t('none');
                         if (loraPreview) loraPreview.innerText = loraText || t('none');
-                        if (coverPreview) coverPreview.innerText = coverText || t('none');
                         if (promptNegativePreview) promptNegativePreview.innerText = promptNegativeText || t('none');
                         
                         // 更新allItems数组中的对应项的属性
@@ -1515,57 +1532,32 @@ class UI {
         
         modal.appendChild(leftPanel);
         modal.appendChild(rightPanel);
-        
-        // 添加调整大小的手柄
-        const resizeHandle = document.createElement("div");
-        resizeHandle.className = "vl-resize-handle";
-        modal.appendChild(resizeHandle);
-        
+
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
-        
-        // 实现窗口大小调节功能
-        let isResizing = false;
-        let startX, startY, startWidth, startHeight;
-        
-        resizeHandle.addEventListener('mousedown', (e) => {
-            isResizing = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            startWidth = parseInt(document.defaultView.getComputedStyle(modal).width, 10);
-            startHeight = parseInt(document.defaultView.getComputedStyle(modal).height, 10);
-            
-            // 添加全局鼠标事件监听器
-            document.addEventListener('mousemove', resize);
-            document.addEventListener('mouseup', stopResize);
-            
-            // 防止默认行为和事件冒泡
-            e.preventDefault();
-        });
-        
-        function resize(e) {
-            if (!isResizing) return;
-            
-            const width = startWidth + (e.clientX - startX);
-            const height = startHeight + (e.clientY - startY);
-            
-            // 设置最小宽度和高度
-            const minWidth = 800;
-            const minHeight = 500;
-            
-            if (width >= minWidth && height >= minHeight) {
-                modal.style.width = `${width}px`;
-                modal.style.height = `${height}px`;
-            }
-        }
-        
-        function stopResize() {
-            isResizing = false;
-            // 移除全局鼠标事件监听器
-            document.removeEventListener('mousemove', resize);
-            document.removeEventListener('mouseup', stopResize);
-        }
-        
+
+        // 加载初始图片 - 使用原始图片 URL
+        const originalImageUrl = window.location.origin + `/view?filename=${encodeURIComponent(filename)}&type=output`;
+        setTimeout(() => {
+            console.log('[showImagePreview] Loading initial image:', originalImageUrl);
+            img.src = originalImageUrl;
+            img.onload = () => {
+                console.log('[showImagePreview] Image loaded successfully');
+                if (loadingPlaceholder) {
+                    loadingPlaceholder.style.display = "none";
+                }
+                img.style.display = "block";
+                img.style.opacity = '1';
+            };
+            img.onerror = (e) => {
+                console.error('[showImagePreview] Failed to load image:', originalImageUrl, e);
+                if (loadingPlaceholder) {
+                    loadingPlaceholder.style.display = "flex";
+                }
+                img.style.display = "none";
+            };
+        }, 100);
+
         // 关闭按钮事件
         header.querySelector('.vl-preview-close').onclick = () => {
             document.body.removeChild(overlay);
@@ -1620,31 +1612,59 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
             url += `&path=${encodeURIComponent(path)}`;
         }
 
+        console.log('[loadImageInfo] === DEBUG INFO ===');
+        console.log('[loadImageInfo] filename param:', filename);
+        console.log('[loadImageInfo] path param:', path);
+        console.log('[loadImageInfo] Full URL:', url);
+
         // 尝试从后端获取信息
-        const response = await api.fetchApi(url);
-        
+        let response;
+        try {
+            response = await api.fetchApi(url);
+        } catch (networkError) {
+            console.error('[loadImageInfo] Network error:', networkError);
+            throw networkError;
+        }
+
+        console.log('[loadImageInfo] Response status:', response.status);
+
         if (!response.ok) {
             throw new Error('Failed to fetch media info');
         }
-        
-        let data = await response.json() || {};
-        
+
+        const rawText = await response.text();
+        console.log('[loadImageInfo] Raw response text:', rawText);
+
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (e) {
+            console.error('[loadImageInfo] JSON parse error:', e);
+            data = {};
+        }
+
+        console.log('[loadImageInfo] API Response data:', data);
+
+        if (data.error) {
+            console.error('[loadImageInfo] API returned error:', data.error);
+        }
+
         // 尝试从图片中提取信息
         const mediaContainer = document.querySelector('.vl-preview-media-container');
+        console.log('[loadImageInfo] Media container found:', !!mediaContainer);
         if (mediaContainer) {
             const imgElement = mediaContainer.querySelector('img');
+            console.log('[loadImageInfo] Img element found:', !!imgElement);
             if (imgElement) {
                 const imageInfo = extractInfoFromImage(imgElement);
                 // 合并从图片中提取的信息
                 data = { ...data, ...imageInfo };
             }
         }
-        
+
         // 更新预览文本
         const filenamePreview = document.getElementById('vl-filename-preview');
         const filetypeEl = document.getElementById('vl-filetype');
-        const coverPreview = document.getElementById('vl-cover-preview');
-        const coverSection = document.getElementById('vl-cover-section');
         const stylePreview = document.getElementById('vl-style-preview');
         const checkpointsPreview = document.getElementById('vl-checkpoints-preview');
         const loraPreview = document.getElementById('vl-lora-preview');
@@ -1653,10 +1673,22 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         const schedulerPreview = document.getElementById('vl-scheduler-preview');
         const stepsPreview = document.getElementById('vl-steps-preview');
         const promptPositivePreviewContainer = document.getElementById('vl-prompt-positive-preview-container');
-        
+
+        console.log('[loadImageInfo] Element checks:', {
+            filenamePreview: !!filenamePreview,
+            filetypeEl: !!filetypeEl,
+            stylePreview: !!stylePreview,
+            checkpointsPreview: !!checkpointsPreview,
+            loraPreview: !!loraPreview,
+            promptNegativePreview: !!promptNegativePreview,
+            samplerPreview: !!samplerPreview,
+            schedulerPreview: !!schedulerPreview,
+            stepsPreview: !!stepsPreview,
+            promptPositivePreviewContainer: !!promptPositivePreviewContainer
+        });
+
         // 更新编辑输入框
         const filenameEl = document.getElementById('vl-filename');
-        const coverEl = document.getElementById('vl-cover');
         const styleEl = document.getElementById('vl-style');
         const checkpointsEl = document.getElementById('vl-checkpoints');
         const loraEl = document.getElementById('vl-lora');
@@ -1667,10 +1699,20 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         const promptNegativeContainer = document.getElementById('vl-prompt-negative-container');
         
         // 设置预览文本
+        console.log('[loadImageInfo] Setting preview text with data:', {
+            filename: data.display_filename || data.filename,
+            style: data.style,
+            model: data.model || data.checkpoints,
+            lora: data.lora,
+            prompt_negative: data.prompt_negative || data.negative_prompt,
+            sampler: data.sampler,
+            scheduler: data.scheduler,
+            steps: data.steps,
+            cfg: data.cfg
+        });
+
         if (filenamePreview) filenamePreview.innerText = data.display_filename || data.filename || t('none');
-        if (filetypeEl) filetypeEl.innerText = data.is_video ? 'Video' : 'Image';
-        if (coverPreview) coverPreview.innerText = data.cover_image || t('none');
-        if (coverSection) coverSection.style.display = data.is_video ? 'block' : 'none';
+        if (filetypeEl) filetypeEl.innerText = 'Image';
         if (stylePreview) stylePreview.innerText = data.style || t('none');
         if (checkpointsPreview) checkpointsPreview.innerText = data.model || data.checkpoints || t('none');
         if (loraPreview) loraPreview.innerText = data.lora || t('none');
@@ -1680,10 +1722,11 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         if (stepsPreview) stepsPreview.innerText = data.steps || t('none');
         const cfgPreview = document.getElementById('vl-cfg-preview');
         if (cfgPreview) cfgPreview.innerText = data.cfg || t('none');
+
+        console.log('[loadImageInfo] After setting text, filenamePreview innerText:', filenamePreview?.innerText);
         
         // 设置编辑输入框的值
         if (filenameEl) filenameEl.value = data.display_filename || data.filename || '';
-        if (coverEl) coverEl.value = data.cover_image || '';
         if (styleEl) styleEl.value = data.style || '';
         if (checkpointsEl) checkpointsEl.value = data.model || data.checkpoints || '';
         if (loraEl) loraEl.value = data.lora || '';
@@ -1841,17 +1884,26 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         // 处理正向提示词编辑输入框
         if (promptPositiveContainer) {
             promptPositiveContainer.innerHTML = '';
-            const promptPositiveData = data.prompt_positive || data.prompt || '';
+            const promptPositiveData = data.prompt_positive || '';
             let prompts = Array.isArray(promptPositiveData) ? promptPositiveData : [promptPositiveData];
-            
-            // 过滤掉空的正向提示词
-            prompts = prompts.filter(prompt => prompt && prompt.trim() !== '');
-            
+
+            // 过滤掉空的正向提示词和JSON格式的数据
+            prompts = prompts.filter(prompt => {
+                if (!prompt || !prompt.trim()) return false;
+                // 检查是否是JSON格式的字符串（工作流数据）
+                const trimmed = prompt.trim();
+                if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+                    (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+                    return false;
+                }
+                return true;
+            });
+
             // 如果没有正向提示词，添加一个空字符串作为默认值
             if (prompts.length === 0) {
                 prompts.push('');
             }
-            
+
             prompts.forEach((prompt, index) => {
                 const textarea = document.createElement('textarea');
                 textarea.className = 'vl-info-value vl-info-prompt-positive';
@@ -1864,13 +1916,13 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
                 promptPositiveContainer.appendChild(textarea);
             });
         }
-        
+
         // 处理负向提示词编辑输入框
         const promptNegativeContainerEdit = document.getElementById('vl-prompt-negative-container');
         if (promptNegativeContainerEdit) {
             promptNegativeContainerEdit.innerHTML = '';
             const promptNegativeData = data.prompt_negative || data.negative_prompt || '';
-            
+
             // 分割负向提示词，最多显示两个输入框
             let negativePrompts = [promptNegativeData];
             if (promptNegativeData) {
@@ -1902,74 +1954,18 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
                 promptNegativeContainerEdit.appendChild(textarea);
             });
         }
-        
-        // 更新左侧媒体显示
-        const leftMediaContainer = document.querySelector('.vl-preview-media-container');
-        if (leftMediaContainer && data.is_video) {
-            // 对于视频，显示封面图和播放按钮
-            // 优先使用后端返回的完整 URL，其次使用保存的封面图，最后使用原始图片 URL
-            let coverUrl = imageUrl;  // 使用传入的完整 URL（来自后端）
 
-            // 如果后端返回了自定义封面图，则使用它
-            if (data.cover_image && data.cover_image.startsWith('http')) {
-                coverUrl = data.cover_image;
-            } else if (data.cover_image && data.cover_image !== data.filename) {
-                // 封面图是不同的文件名，构建 URL
-                const encodedCover = encodeURIComponent(data.cover_image);
-                coverUrl = `/view?filename=${encodedCover}&type=output`;
-            }
-
-            console.log('[VideoPreview] Using cover URL:', coverUrl);
-
-            // 创建图片元素
-            const img = document.createElement("img");
-            img.className = "vl-preview-image";
-            img.src = coverUrl;
-            img.alt = data.filename || filename;
-            
-            // 处理图片加载失败
-            img.onerror = () => {
-                console.error('[VideoPreview] Failed to load cover image:', coverUrl);
-                // 图片加载失败时显示灰框效果
-                img.style.display = "none";
-                const ph = document.createElement("div");
-                ph.style.backgroundColor = "#333";
-                ph.style.height = "100%";
-                ph.style.width = "100%";
-                ph.style.display = "flex";
-                ph.style.alignItems = "center";
-                ph.style.justifyContent = "center";
-                ph.style.color = "#666";
-                ph.style.fontSize = "14px";
-                ph.innerText = t('loadFailed');
-                leftMediaContainer.appendChild(ph);
-            };
-            
-            // 创建视频覆盖层
-            const overlay = document.createElement("div");
-            overlay.className = "vl-video-overlay";
-            
-            const playButton = document.createElement("div");
-            playButton.className = "vl-play-button";
-            playButton.innerText = "▶";
-            
-            overlay.appendChild(playButton);
-            leftMediaContainer.appendChild(img);
-            leftMediaContainer.appendChild(overlay);
-        }
-        
         // 确保处于预览模式（编辑输入框隐藏，预览文本显示）
         if (toggleEditMode) {
             toggleEditMode(false);
         }
-        
+
     } catch (error) {
         console.error('Error loading image info:', error);
         
         // 即使 API 失败，也显示基本信息
         const filenamePreview = document.getElementById('vl-filename-preview');
         const filetypeEl = document.getElementById('vl-filetype');
-        const coverSection = document.getElementById('vl-cover-section');
         const stylePreview = document.getElementById('vl-style-preview');
         const checkpointsPreview = document.getElementById('vl-checkpoints-preview');
         const loraPreview = document.getElementById('vl-lora-preview');
@@ -1978,9 +1974,8 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         const schedulerPreview = document.getElementById('vl-scheduler-preview');
         const stepsPreview = document.getElementById('vl-steps-preview');
         const promptPositivePreviewContainer = document.getElementById('vl-prompt-positive-preview-container');
-        
+
         const filenameEl = document.getElementById('vl-filename');
-        const coverEl = document.getElementById('vl-cover');
         const styleEl = document.getElementById('vl-style');
         const checkpointsEl = document.getElementById('vl-checkpoints');
         const loraEl = document.getElementById('vl-lora');
@@ -1989,12 +1984,9 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         const schedulerEl = document.getElementById('vl-scheduler');
         const stepsEl = document.getElementById('vl-steps');
         
-        const isVideo = filename.toLowerCase().match(/\.(mp4|avi|mov|wmv|mkv)$/);
-        
         // 设置预览文本
         if (filenamePreview) filenamePreview.innerText = filename || t('none');
-        if (filetypeEl) filetypeEl.innerText = isVideo ? 'Video' : 'Image';
-        if (coverSection) coverSection.style.display = isVideo ? 'block' : 'none';
+        if (filetypeEl) filetypeEl.innerText = 'Image';
         if (stylePreview) stylePreview.innerText = t('none');
         if (checkpointsPreview) checkpointsPreview.innerText = t('none');
         if (loraPreview) loraPreview.innerText = t('none');
@@ -2008,7 +2000,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         
         // 设置编辑输入框
         if (filenameEl) filenameEl.value = filename || '';
-        if (coverEl) coverEl.value = '';
         if (styleEl) styleEl.value = '';
         if (checkpointsEl) checkpointsEl.value = '';
         if (loraEl) loraEl.value = '';
