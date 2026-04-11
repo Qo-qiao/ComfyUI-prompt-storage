@@ -31,7 +31,6 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 
 def get_data_file_path(filename):
     """获取文件对应的数据文件路径"""
-    # 使用文件名（不含扩展名）作为数据文件名
     base_name = os.path.splitext(filename)[0]
     return os.path.join(DATA_DIR, f"{base_name}.json")
 
@@ -57,12 +56,6 @@ def save_image_data(filename, data):
         print(f"Error saving image data: {e}")
         return False
 
-# 检查文件是否为视频
-def is_video_file(filename):
-    """检查文件是否为视频文件"""
-    video_extensions = ('.mp4')
-    return filename.lower().endswith(video_extensions)
-
 # 获取并缓存图片的函数
 def get_cached_image_path(image_path):
     """获取图片的缓存路径"""
@@ -87,10 +80,10 @@ def get_cached_image_path(image_path):
             img = img.convert("RGB")
         
         # 限制最大尺寸
-        max_size = (256, 512)
+        max_size = (256, 256)
         img.thumbnail(max_size)
         
-        img.save(cache_path, "JPEG")
+        img.save(cache_path, "PNG")
         return web_path
     except Exception as e:
         print(f"[ImagePrompt] 图片缓存失败: {e}")
@@ -110,10 +103,7 @@ async def api_get_images(request):
         for file in os.listdir(image_dir):
             # 支持图片文件
             if file.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif')):
-                # 检查是否为视频文件
-                is_video = is_video_file(file)
-                
-                # 加载保存的数据，获取封面图信息和风格类型
+                # 加载保存的数据，获取风格类型
                 saved_data = load_image_data(file)
                 style = saved_data.get('style', '未分类')
                 display_filename = saved_data.get('display_filename', file)
@@ -124,41 +114,31 @@ async def api_get_images(request):
                 scheduler = saved_data.get('scheduler', '')
                 steps = saved_data.get('steps', '')
                 cfg = saved_data.get('cfg', '')
-                
+                prompt_positive = saved_data.get('prompt_positive', '')
+                prompt_negative = saved_data.get('prompt_negative', '')
+
                 # 生成文件 URL
                 file_path = os.path.join(image_dir, file)
                 file_url = get_cached_image_path(file_path)
-                
+
                 # 如果缓存失败，使用原始路径
                 if not file_url:
                     file_url = f"/view?filename={file}&type=output"
-                
-                # 对于视频，使用封面图
-                if is_video:
-                    cover_image = saved_data.get('cover_image', '')
-                    if cover_image and cover_image.startswith('http'):
-                        file_url = cover_image
-                    elif cover_image:
-                        cover_path = os.path.join(image_dir, cover_image)
-                        cover_url = get_cached_image_path(cover_path)
-                        if cover_url:
-                            file_url = cover_url
-                        else:
-                            file_url = f"/view?filename={cover_image}&type=output"
-                
+
                 images.append({
                     "name": file,
                     "display_filename": display_filename,
                     "category": style if style else "未分类",
                     "imageUrl": file_url,
-                    "is_video": is_video,
                     "model": model,
                     "checkpoints": checkpoints,
                     "lora": lora,
                     "sampler": sampler,
                     "scheduler": scheduler,
                     "steps": steps,
-                    "cfg": cfg
+                    "cfg": cfg,
+                    "prompt_positive": prompt_positive,
+                    "prompt_negative": prompt_negative
                 })
     
     return web.json_response(images)
@@ -176,30 +156,27 @@ async def api_get_image_info(request):
     # 获取文件路径
     image_dir = path if path else folder_paths.get_output_directory()
     image_path = os.path.join(image_dir, filename)
-    
+
     if not os.path.exists(image_path):
         return web.json_response({"error": "文件不存在"}, status=404)
     
     # 读取文件的元数据
     metadata = {}
-    is_video = is_video_file(filename)
-    
+
     # 初始化变量，设置默认值
     style = ''
     model = ''
     lora = ''
-    civitai_info = ''
-    cover_image = ''
     sampler = ''
     scheduler = ''
     steps = ''
     cfg = ''
-    
-    # 从数据文件中加载保存的提示词和 Civitai 信息（优先使用保存的数据）
+
+    # 从数据文件中加载保存的提示词（优先使用保存的数据）
     saved_data = load_image_data(filename)
     prompt_positive = ''
     prompt_negative = ''
-    
+
     if saved_data:
         if 'display_filename' in saved_data:
             filename = saved_data['display_filename']
@@ -212,12 +189,6 @@ async def api_get_image_info(request):
             prompt_positive = saved_data['prompt_positive']
         if 'prompt_negative' in saved_data:
             prompt_negative = saved_data['prompt_negative']
-        if 'civitai_info' in saved_data:
-            civitai_info = saved_data['civitai_info']
-        if 'cover_image' in saved_data:
-            cover_image = saved_data['cover_image']
-        else:
-            cover_image = ''
         if 'model' in saved_data:
             model = saved_data['model']
         if 'lora' in saved_data:
@@ -233,45 +204,43 @@ async def api_get_image_info(request):
     else:
         # 没有保存的数据，尝试从图片元数据中提取
         style = ''
-        cover_image = ''
-        
-        # 对于图片文件，读取元数据
-        if not is_video:
-            try:
-                with Image.open(image_path) as img:
-                    if hasattr(img, 'info'):
-                        # 尝试获取 A1111 格式的提示词
-                        if 'parameters' in img.info:
-                            parameters = img.info['parameters']
-                            # 解析 parameters 字段
-                            if 'Negative prompt:' in parameters:
-                                parts = parameters.split('Negative prompt:')
-                                prompt_positive = parts[0].strip()
-                                remaining = parts[1] if len(parts) > 1 else ''
-                                if 'Steps:' in remaining:
-                                    prompt_negative = remaining.split('Steps:')[0].strip()
-                                else:
-                                    prompt_negative = remaining.strip()
+
+        # 读取图片元数据
+        try:
+            with Image.open(image_path) as img:
+                if hasattr(img, 'info'):
+                    # 尝试获取 A1111 格式的提示词
+                    if 'parameters' in img.info:
+                        parameters = img.info['parameters']
+                        # 解析 parameters 字段
+                        if 'Negative prompt:' in parameters:
+                            parts = parameters.split('Negative prompt:')
+                            prompt_positive = parts[0].strip()
+                            remaining = parts[1] if len(parts) > 1 else ''
+                            if 'Steps:' in remaining:
+                                prompt_negative = remaining.split('Steps:')[0].strip()
                             else:
-                                prompt_positive = parameters
-                        # 获取其他元数据
-                        for key, value in img.info.items():
-                            metadata[key] = str(value)
-            except Exception as e:
-                metadata['error'] = str(e)
-        
+                                prompt_negative = remaining.strip()
+                        else:
+                            prompt_positive = parameters
+                    # 获取其他元数据
+                    for key, value in img.info.items():
+                        metadata[key] = str(value)
+        except Exception as e:
+            metadata['error'] = str(e)
+
         # 如果没有提取到提示词，使用 metadata 中的字段
         if not prompt_positive:
             prompt_positive = metadata.get('prompt', '')
         if not prompt_negative:
             prompt_negative = metadata.get('negative_prompt', '')
-    
+
     # 处理正向提示词，确保返回数组格式
     if isinstance(prompt_positive, list):
         prompt_positive_array = prompt_positive
     else:
         prompt_positive_array = [prompt_positive] if prompt_positive else []
-    
+
     # 从 metadata 中提取额外信息（只有当保存的数据中没有时才使用）
     seed = metadata.get('seed', '')
     if not steps:
@@ -281,7 +250,7 @@ async def api_get_image_info(request):
     if not sampler:
         sampler = metadata.get('sampler', '')
     size = metadata.get('size', '')
-    
+
     # 返回详细信息
     return web.json_response({
         "filename": filename,
@@ -298,9 +267,6 @@ async def api_get_image_info(request):
         "size": size,
         "model": model,
         "lora": lora,
-        "civitai_info": civitai_info,
-        "is_video": is_video,
-        "cover_image": cover_image,
         "metadata": metadata
     })
 
@@ -328,8 +294,6 @@ async def api_save_image_info(request):
         style = data.get('style', '')
         prompt_positive = data.get('prompt_positive', '')
         prompt_negative = data.get('prompt_negative', '')
-        civitai_info = data.get('civitai_info', '')
-        cover_image = data.get('cover_image', '')
         model = data.get('model', '')
         lora = data.get('lora', '')
         sampler = data.get('sampler', '')
@@ -337,17 +301,17 @@ async def api_save_image_info(request):
         steps = data.get('steps', '')
         cfg = data.get('cfg', '')
         path = data.get('path', folder_paths.get_output_directory())
-        
+
         if not original_filename:
             return web.json_response({"error": "未提供文件名"}, status=400)
-        
+
         # 获取文件路径
         image_dir = path if path else folder_paths.get_output_directory()
         image_path = os.path.join(image_dir, original_filename)
-        
+
         if not os.path.exists(image_path):
             return web.json_response({"error": "文件不存在"}, status=404)
-        
+
         # 保存数据到 JSON 文件
         save_data = {
             'original_filename': original_filename,
@@ -355,8 +319,6 @@ async def api_save_image_info(request):
             'style': style,
             'prompt_positive': prompt_positive,
             'prompt_negative': prompt_negative,
-            'civitai_info': civitai_info,
-            'cover_image': cover_image,
             'model': model,
             'lora': lora,
             'sampler': sampler,
@@ -365,14 +327,14 @@ async def api_save_image_info(request):
             'cfg': cfg,
             'updated_at': os.path.getmtime(image_path)
         }
-        
+
         success = save_image_data(original_filename, save_data)
-        
+
         if success:
             return web.json_response({"success": True, "message": "保存成功"})
         else:
             return web.json_response({"error": "保存失败"}, status=500)
-            
+
     except Exception as e:
         print(f"Error in save_image_info: {e}")
         return web.json_response({"error": str(e)}, status=500)
