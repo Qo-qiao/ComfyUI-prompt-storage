@@ -186,11 +186,11 @@
 .vl-search {
     flex: 1;
     height: 100%;
-    background: #000;
+    background: #1a1a1a;
     border: 1px solid #444;
-    border-radius: 4px;
+    border-radius: 6px;
     color: #fff;
-    padding: 0 12px;
+    padding: 8px 12px;
     font-size: 12px;
     outline: none;
     transition: border-color 0.2s ease;
@@ -633,6 +633,71 @@
     font-size: 14px;
 }
 
+/* 列表项悬停预览 */
+.vl-list-item-tooltip {
+    position: fixed;
+    z-index: 1000;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 12px;
+    max-width: 300px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    display: none;
+}
+
+.vl-list-item-tooltip.visible {
+    display: block;
+}
+
+.vl-tooltip-image {
+    width: 100%;
+    max-height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.vl-tooltip-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #eee;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vl-tooltip-section {
+    margin-bottom: 8px;
+}
+
+.vl-tooltip-label {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 2px;
+}
+
+.vl-tooltip-value {
+    font-size: 12px;
+    color: #ccc;
+    word-break: break-all;
+    max-height: 60px;
+    overflow: hidden;
+    display: -webkit-box;
+    display: box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.vl-tooltip-divider {
+    height: 1px;
+    background: #333;
+    margin: 8px 0;
+}
+
 /* 卡片模型标签 */
 .vl-model-badge {
     position: absolute;
@@ -803,10 +868,10 @@
 
 .vl-btn {
     flex: 1;
-    background: #444;
-    color: #eee;
-    border: none;
-    border-radius: 4px;
+    background: #1a1a1a;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
@@ -819,8 +884,8 @@
 }
 
 .vl-btn:hover:not(:disabled) {
-    background: #555;
-    transform: translateY(-1px);
+    background: #333;
+    border-color: #555;
 }
 
 .vl-btn:disabled {
@@ -831,14 +896,14 @@
 }
 
 .vl-btn.primary {
-    background: #2a6;
+    background: #4CAF50;
     color: #fff;
-    box-shadow: 0 2px 4px rgba(34, 170, 102, 0.2);
+    border-color: #4CAF50;
 }
 
 .vl-btn.primary:hover:not(:disabled) {
-    background: #3b7;
-    box-shadow: 0 3px 6px rgba(34, 170, 102, 0.3);
+    background: #66BB6A;
+    border-color: #66BB6A;
 }
 
 /* 中间按钮样式 */
@@ -1076,6 +1141,105 @@
     height: 36px;
 }
 
+/* 数字输入框自定义箭头样式 */
+.vl-info-model-input[type="number"] {
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+    padding-right: 40px;
+}
+
+.vl-info-model-input[type="number"]::-webkit-inner-spin-button,
+.vl-info-model-input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* 数字输入框容器 */
+.vl-number-input-container {
+    position: relative;
+    width: 100%;
+}
+
+.vl-number-input-container input[type="number"] {
+    width: 100%;
+    height: 36px;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+    padding-right: 40px;
+    box-sizing: border-box;
+}
+
+.vl-number-input-container input[type="number"].vl-info-value {
+    padding: 9px 40px 9px 12px;
+}
+
+.vl-number-input-container input[type="number"]::-webkit-inner-spin-button,
+.vl-number-input-container input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* 上下箭头按钮容器 */
+.vl-number-spin-buttons {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    display: flex;
+    flex-direction: column;
+    height: 34px;
+    overflow: hidden;
+}
+
+/* 箭头按钮 */
+.vl-number-spin-btn {
+    flex: 1;
+    width: 28px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: #888;
+}
+
+.vl-number-spin-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.vl-number-spin-btn:first-child {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 箭头图标 */
+.vl-number-spin-btn::before {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+}
+
+.vl-number-spin-btn.up::before {
+    border-bottom: 5px solid #aaa;
+}
+
+.vl-number-spin-btn.down::before {
+    border-top: 5px solid #aaa;
+}
+
+.vl-number-spin-btn:hover::before {
+    border-bottom-color: #fff;
+}
+
+.vl-number-spin-btn.down:hover::before {
+    border-top-color: #fff;
+}
+
 /* 预览文本样式 */
 .vl-info-text {
     min-height: 36px;
@@ -1165,6 +1329,74 @@
 .vl-file-type option {
     background: var(--vl-bg);
     color: var(--vl-text);
+}
+
+/* 标签筛选按钮样式 */
+.vl-filter-icon {
+    width: 28px;
+    height: 28px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.vl-filter-icon:hover {
+    background: #444;
+    border-color: #555;
+    color: #aaa;
+}
+
+.vl-filter-icon.active {
+    background: #4AF;
+    border-color: #4AF;
+    color: #fff;
+}
+
+/* 标签筛选下拉框样式 */
+.vl-filter-dropdown {
+    position: fixed;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    min-width: 150px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.vl-filter-option {
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 12px;
+    color: #ddd;
+    white-space: nowrap;
+}
+
+.vl-filter-option:hover {
+    background: #444;
+}
+
+.vl-filter-option.active {
+    background: #4AF;
+    color: #fff;
+}
+
+.vl-filter-option:first-child {
+    border-radius: 4px 4px 0 0;
+}
+
+.vl-filter-option:last-child {
+    border-radius: 0 0 4px 4px;
 }
 
 /* 确保在深色模式下的可读性 */
@@ -1298,4 +1530,32 @@
 
 .vl-tooltip-meta-label {
     color: #666;
+}
+
+/* 空状态样式 */
+.vl-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.vl-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.vl-empty-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.vl-empty-hint {
+    font-size: 12px;
+    color: #555;
 }

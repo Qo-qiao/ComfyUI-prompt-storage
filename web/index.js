@@ -1,5 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { createImageWidget } from "./visual_image.js";
+import "./template_index.js";
 
 const timestamp = new Date().getTime();
 const link = document.createElement("link");
