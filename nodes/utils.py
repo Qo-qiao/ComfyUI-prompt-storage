@@ -125,6 +125,13 @@ async def api_get_images(request):
                 if not file_url:
                     file_url = f"/view?filename={file}&type=output"
 
+                tags = saved_data.get('tags', [])
+                # 确保 tags 是数组格式
+                if isinstance(tags, str):
+                    tags = [t.strip() for t in tags.split(',') if t.strip()]
+                elif not isinstance(tags, list):
+                    tags = []
+
                 images.append({
                     "name": file,
                     "display_filename": display_filename,
@@ -138,7 +145,8 @@ async def api_get_images(request):
                     "steps": steps,
                     "cfg": cfg,
                     "prompt_positive": prompt_positive,
-                    "prompt_negative": prompt_negative
+                    "prompt_negative": prompt_negative,
+                    "tags": tags
                 })
     
     return web.json_response(images)
@@ -201,9 +209,19 @@ async def api_get_image_info(request):
             steps = saved_data['steps']
         if 'cfg' in saved_data:
             cfg = saved_data['cfg']
+        if 'tags' in saved_data:
+            tags = saved_data['tags']
+            # 确保 tags 是数组格式
+            if isinstance(tags, str):
+                tags = [t.strip() for t in tags.split(',') if t.strip()]
+            elif not isinstance(tags, list):
+                tags = []
+        else:
+            tags = []
     else:
         # 没有保存的数据，尝试从图片元数据中提取
         style = ''
+        tags = []
 
         # 读取图片元数据
         try:
@@ -255,6 +273,7 @@ async def api_get_image_info(request):
     return web.json_response({
         "filename": filename,
         "style": style,
+        "tags": tags,
         "prompt": prompt_positive,  # 原始提示词
         "prompt_positive": prompt_positive_array,  # 数组格式
         "prompt_negative": prompt_negative,
@@ -300,6 +319,7 @@ async def api_save_image_info(request):
         scheduler = data.get('scheduler', '')
         steps = data.get('steps', '')
         cfg = data.get('cfg', '')
+        tags = data.get('tags', [])
         path = data.get('path', folder_paths.get_output_directory())
 
         if not original_filename:
@@ -325,6 +345,7 @@ async def api_save_image_info(request):
             'scheduler': scheduler,
             'steps': steps,
             'cfg': cfg,
+            'tags': tags,
             'updated_at': os.path.getmtime(image_path)
         }
 
@@ -338,6 +359,31 @@ async def api_save_image_info(request):
     except Exception as e:
         print(f"Error in save_image_info: {e}")
         return web.json_response({"error": str(e)}, status=500)
+
+# 获取所有标签
+@PromptServer.instance.routes.get("/comfyui-image-prompt/all-tags")
+async def api_get_all_tags(request):
+    """获取所有图片的标签"""
+    all_tags = set()
+    
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+    os.makedirs(data_dir, exist_ok=True)
+    
+    for filename in os.listdir(data_dir):
+        if filename.endswith('.json'):
+            file_path = os.path.join(data_dir, filename)
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    saved_data = json.load(f)
+                    tags = saved_data.get('tags', [])
+                    if isinstance(tags, list):
+                        all_tags.update(tags)
+            except Exception as e:
+                print(f"Error reading {filename}: {e}")
+    
+    return web.json_response({
+        "tags": list(all_tags)
+    })
 
 # 注册路由函数（保持兼容）
 def register_routes(app):
