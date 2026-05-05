@@ -17,12 +17,12 @@ from server import PromptServer
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "..", "templates")
 os.makedirs(TEMPLATE_DIR, exist_ok=True)
 
-def get_template_file_path(filename):
+def get_template_file_path(filename, template_dir=TEMPLATE_DIR):
     base_name = os.path.splitext(filename)[0]
-    return os.path.join(TEMPLATE_DIR, f"{base_name}.json")
+    return os.path.join(template_dir, f"{base_name}.json")
 
-def load_template_data(filename):
-    data_file = get_template_file_path(filename)
+def load_template_data(filename, template_dir=TEMPLATE_DIR):
+    data_file = get_template_file_path(filename, template_dir)
     if os.path.exists(data_file):
         try:
             with open(data_file, 'r', encoding='utf-8') as f:
@@ -31,8 +31,8 @@ def load_template_data(filename):
             print(f"Error loading template data: {e}")
     return {}
 
-def save_template_data(filename, data):
-    data_file = get_template_file_path(filename)
+def save_template_data(filename, data, template_dir=TEMPLATE_DIR):
+    data_file = get_template_file_path(filename, template_dir)
     try:
         with open(data_file, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
@@ -125,27 +125,58 @@ async def api_save_template(request):
         os.makedirs(template_dir, exist_ok=True)
         template_path = os.path.join(template_dir, filename)
         
-        # 根据文件类型进行保存
-        if filename.lower().endswith('.json'):
-            # JSON 文件：保存完整数据
+        has_tags = tags and len(tags) > 0
+        is_json = filename.lower().endswith('.json')
+        converted = False
+        
+        if has_tags and not is_json:
+            # 如果设置了标签但文件不是JSON格式，转换为JSON格式
+            # 生成新的JSON文件名
+            base_name = os.path.splitext(filename)[0]
+            new_filename = f"{base_name}.json"
+            new_template_path = os.path.join(template_dir, new_filename)
+            
+            # 保存为JSON格式
             save_data = {
                 'title': title,
                 'content': content,
                 'tags': tags
             }
-            success = save_template_data(filename, save_data)
+            success = save_template_data(new_filename, save_data, template_dir)
+            
+            if success:
+                # 删除原有的非JSON文件
+                if os.path.exists(template_path):
+                    os.remove(template_path)
+                    print(f"Deleted original file: {filename}")
+                
+                converted = True
+                filename = new_filename
         else:
-            # TXT 和 MD 文件：直接保存内容到原文件
-            try:
-                with open(template_path, 'w', encoding='utf-8') as f:
-                    f.write(content)
-                success = True
-            except Exception as e:
-                print(f"Error saving template: {e}")
-                success = False
+            # JSON 文件或没有标签的情况：正常保存
+            if is_json:
+                save_data = {
+                    'title': title,
+                    'content': content,
+                    'tags': tags
+                }
+                success = save_template_data(filename, save_data, template_dir)
+            else:
+                # TXT 和 MD 文件：直接保存内容到原文件
+                try:
+                    with open(template_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    success = True
+                except Exception as e:
+                    print(f"Error saving template: {e}")
+                    success = False
         
         if success:
-            return web.json_response({"success": True, "message": "保存成功"})
+            response_data = {"success": True, "message": "保存成功", "filename": filename}
+            if converted:
+                response_data["converted"] = True
+                response_data["message"] = "已转换为JSON格式并保存"
+            return web.json_response(response_data)
         else:
             return web.json_response({"error": "保存失败"}, status=500)
     

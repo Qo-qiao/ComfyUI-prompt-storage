@@ -22,18 +22,11 @@ class PromptTemplate:
 
     @classmethod
     def INPUT_TYPES(cls):
-        template_files = []
-        if os.path.exists(TEMPLATE_DIR):
-            for file in os.listdir(TEMPLATE_DIR):
-                if file.lower().endswith(('.txt', '.json', '.md')):
-                    template_files.append(file)
-        
         default_path = TEMPLATE_DIR
         
         return {
             "required": {
                 "模板路径(Path)": ("STRING", {"default": default_path, "multiline": False}),
-                "模板文件(File)": (template_files,),
             },
             "optional": {
                 "模板内容(Content)": ("STRING", {"default": "", "multiline": False}),
