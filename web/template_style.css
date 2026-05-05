@@ -59,9 +59,9 @@
 }
 
 .pt-filter-btn.active {
-    background: #4a4a4a;
+    background: #388e3c;
     color: #fff;
-    border-color: #666;
+    border-color: #388e3c;
 }
 
 .pt-filter-dropdown {
@@ -88,8 +88,8 @@
 }
 
 .pt-filter-option.active {
-    background: #4a4a4a;
-    color: #4fc3f7;
+    background: #388e3c;
+    color: #ffffff;
 }
 
 .pt-info-bar {
@@ -128,17 +128,17 @@
 }
 
 .pt-list-item {
-    padding: 12px;
     margin-bottom: 6px;
-    background: #252525;
+    background: #2a2a2a;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
     border: 1px solid transparent;
+    overflow: hidden;
 }
 
 .pt-list-item:hover {
-    background: #2a2a2a;
+    background: #2e2e2e;
     border-color: #444;
 }
 
@@ -151,13 +151,13 @@
     font-size: 14px;
     font-weight: 500;
     color: #fff;
-    margin-bottom: 6px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
     gap: 6px;
+    padding: 12px;
 }
 
 .pt-list-item-title-content {
@@ -170,10 +170,15 @@
 .pt-list-item-extension {
     font-size: 11px;
     color: #666;
-    background: #2a2a2a;
+    background: #333;
     padding: 1px 6px;
     border-radius: 3px;
     flex-shrink: 0;
+}
+
+.pt-list-item-content {
+    background: #252525;
+    padding: 0 12px 12px;
 }
 
 .pt-list-item-tags {
@@ -181,14 +186,15 @@
     flex-wrap: wrap;
     gap: 4px;
     margin-bottom: 6px;
+    padding-top: 8px;
 }
 
 .pt-list-item-tag {
     padding: 2px 8px;
-    background: #333;
+    background: #388e3c;
     border-radius: 4px;
     font-size: 11px;
-    color: #aaa;
+    color: #fff;
 }
 
 .pt-list-item-tag-more {
@@ -204,10 +210,10 @@
 
 .pt-list-item-category {
     padding: 2px 8px;
-    background: #2a4a2a;
+    background: #388e3c;
     border-radius: 4px;
     font-size: 11px;
-    color: #4fc3f7;
+    color: #c8e6c9;
 }
 
 .pt-list-item-preview {
@@ -389,7 +395,7 @@
 
 .pt-modal-input:focus,
 .pt-modal-textarea:focus {
-    border-color: #4fc3f7;
+    border-color: #ffffff;
 }
 
 .pt-modal-footer {

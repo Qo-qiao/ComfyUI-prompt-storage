@@ -185,7 +185,7 @@ class TemplateUI {
         
         const filterIcon = document.createElement("button");
         filterIcon.className = "pt-filter-btn";
-        filterIcon.innerHTML = "&#x2630;";
+        filterIcon.innerHTML = "&#9661;";
         filterIcon.title = t('filterByTag');
         searchWrapper.appendChild(filterIcon);
         
@@ -219,16 +219,13 @@ class TemplateUI {
         const titleEl = document.createElement("div");
         titleEl.className = "pt-list-item-title";
         
-        // 获取文件扩展名
         const ext = item.name ? item.name.split('.').pop().toLowerCase() : '';
         
-        // 创建标题容器，包含标题和扩展名
         const titleContent = document.createElement("div");
         titleContent.className = "pt-list-item-title-content";
         titleContent.innerText = item.title || item.name || '';
         titleEl.appendChild(titleContent);
         
-        // 添加文件扩展名显示
         if (ext) {
             const extEl = document.createElement("span");
             extEl.className = "pt-list-item-extension";
@@ -238,6 +235,9 @@ class TemplateUI {
         
         titleEl.title = item.title || item.name || '';
         listItem.appendChild(titleEl);
+
+        const contentEl = document.createElement("div");
+        contentEl.className = "pt-list-item-content";
 
         const tagsContainer = document.createElement("div");
         tagsContainer.className = "pt-list-item-tags";
@@ -262,12 +262,14 @@ class TemplateUI {
             tagsContainer.appendChild(placeholderEl);
         }
 
-        listItem.appendChild(tagsContainer);
+        contentEl.appendChild(tagsContainer);
 
         const previewEl = document.createElement("div");
         previewEl.className = "pt-list-item-preview";
         previewEl.innerText = (item.content || '').substring(0, 80) + ((item.content || '').length > 80 ? '...' : '');
-        listItem.appendChild(previewEl);
+        contentEl.appendChild(previewEl);
+
+        listItem.appendChild(contentEl);
 
         // 添加悬停预览功能
         if (item.content && item.content.length > 80) {
@@ -434,8 +436,16 @@ class TemplateUI {
                 }
 
                 const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
+                const hasTags = tags.length > 0;
+                const isJson = item.name && item.name.toLowerCase().endsWith('.json');
 
-                onSave({ title, content, tags, category: '' });
+                if (hasTags && !isJson) {
+                    if (!confirm('设置标签后，文件将转换为JSON格式并删除原文件，确定继续吗？')) {
+                        return;
+                    }
+                }
+
+                onSave({ title, content, tags, category: '', name: item.name });
                 overlay.remove();
             }}
         ]);
@@ -668,6 +678,11 @@ export function createTemplateWidget(node, modelType, topOffset, stateManager) {
         const result = await saveTemplate(selectedTemplate.name, data, currentPath);
         if (result.success) {
             await loadAndRender();
+            // 如果文件名发生了变化（转换为JSON），选中新文件
+            if (result.filename && result.filename !== selectedTemplate.name) {
+                const newItem = templates.find(t => t.name === result.filename);
+                if (newItem) selectTemplate(newItem);
+            }
         }
     };
 
