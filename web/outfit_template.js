@@ -211,6 +211,17 @@ class OutfitStateManager {
         data.search = search;
         localStorage.setItem(this.key, JSON.stringify(data));
     }
+
+    getPath() {
+        const data = JSON.parse(localStorage.getItem(this.key) || '{}');
+        return data.path || '';
+    }
+
+    savePath(path) {
+        const data = JSON.parse(localStorage.getItem(this.key) || '{}');
+        data.path = path;
+        localStorage.setItem(this.key, JSON.stringify(data));
+    }
 }
 
 class OutfitUI {
@@ -570,24 +581,15 @@ class OutfitUI {
                 const categoryField = formFields.find(f => f.name === '_category');
                 let category = categoryField?.element?.value?.trim() || '';
                 
-                console.log('[DEBUG] showCreateModal - category from input:', category);
-                console.log('[DEBUG] showCreateModal - categoryField:', categoryField);
-                console.log('[DEBUG] showCreateModal - selectElement:', categoryField?.selectElement);
-                console.log('[DEBUG] showCreateModal - selectElement.value:', categoryField?.selectElement?.value);
-                
                 // 如果输入框为空，检查下拉菜单是否有选择
                 if (!category && categoryField?.selectElement) {
                     category = categoryField.selectElement.value?.trim() || '';
-                    console.log('[DEBUG] showCreateModal - category from select:', category);
                 }
                 
                 // 如果分类输入仍为空，使用第一个分类选项作为默认值
                 if (!category && categories && categories.length > 0) {
                     category = categories[0];
-                    console.log('[DEBUG] showCreateModal - category from default:', category);
                 }
-                
-                console.log('[DEBUG] showCreateModal - final category:', category);
                 
                 if (category) {
                     data['_category'] = category;
@@ -1110,9 +1112,12 @@ class OutfitUI {
     }
 }
 
-async function loadOutfitFiles() {
+async function loadOutfitFiles(customPath = '') {
     try {
-        const response = await fetch('/comfyui-prompt-storage/outfit/files');
+        const url = customPath 
+            ? `/comfyui-prompt-storage/outfit/files?path=${encodeURIComponent(customPath)}`
+            : '/comfyui-prompt-storage/outfit/files';
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to load files');
         return await response.json();
     } catch (error) {
@@ -1121,9 +1126,13 @@ async function loadOutfitFiles() {
     }
 }
 
-async function loadOutfitCategories(filename) {
+async function loadOutfitCategories(filename, customPath = '') {
     try {
-        const response = await fetch(`/comfyui-prompt-storage/outfit/categories?filename=${encodeURIComponent(filename)}&t=${Date.now()}`);
+        let url = `/comfyui-prompt-storage/outfit/categories?filename=${encodeURIComponent(filename)}&t=${Date.now()}`;
+        if (customPath) {
+            url += `&path=${encodeURIComponent(customPath)}`;
+        }
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to load categories');
         return await response.json();
     } catch (error) {
@@ -1132,12 +1141,12 @@ async function loadOutfitCategories(filename) {
     }
 }
 
-async function saveFieldLabels(filename, fieldLabels) {
+async function saveFieldLabels(filename, fieldLabels, customPath = '') {
     try {
         const response = await fetch('/comfyui-prompt-storage/outfit/saveFieldLabels', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename, fieldLabels })
+            body: JSON.stringify({ filename, fieldLabels, path: customPath })
         });
         if (!response.ok) throw new Error('Failed to save field labels');
         return await response.json();
@@ -1147,12 +1156,12 @@ async function saveFieldLabels(filename, fieldLabels) {
     }
 }
 
-async function saveOutfitItem(filename, item) {
+async function saveOutfitItem(filename, item, customPath = '') {
     try {
         const response = await fetch('/comfyui-prompt-storage/outfit/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename, item })
+            body: JSON.stringify({ filename, item, path: customPath })
         });
         if (!response.ok) throw new Error('Failed to save item');
         return await response.json();
@@ -1162,12 +1171,12 @@ async function saveOutfitItem(filename, item) {
     }
 }
 
-async function deleteOutfitItem(filename, item) {
+async function deleteOutfitItem(filename, item, customPath = '') {
     try {
         const response = await fetch('/comfyui-prompt-storage/outfit/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename, item })
+            body: JSON.stringify({ filename, item, path: customPath })
         });
         if (!response.ok) throw new Error('Failed to delete item');
         return await response.json();
@@ -1177,12 +1186,12 @@ async function deleteOutfitItem(filename, item) {
     }
 }
 
-async function createOutfitFile(filename, category, item) {
+async function createOutfitFile(filename, category, item, customPath = '') {
     try {
         const response = await fetch('/comfyui-prompt-storage/outfit/newFile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename, category, item })
+            body: JSON.stringify({ filename, category, item, path: customPath })
         });
         if (!response.ok) throw new Error('Failed to create file');
         return await response.json();
@@ -1218,6 +1227,7 @@ export function createOutfitWidget(node, filename, topOffset) {
     let filteredItems = [];
     let selectedItem = null;
     let currentFile = filename || stateManager.getLastFile() || '';
+    let currentPath = '';
     let currentCategory = stateManager.getCategory();
     let searchTerm = stateManager.getSearch();
     let currentCategories = [];
@@ -1228,22 +1238,73 @@ export function createOutfitWidget(node, filename, topOffset) {
 
     searchInput.value = searchTerm;
 
-    const loadAndRender = async () => {
-        infoBar.innerText = t('loading');
+    const getCurrentPath = () => {
+        if (node.widgets) {
+            const pathWidget = node.widgets.find(w => w.name === '文件路径(Path)');
+            if (pathWidget) {
+                return pathWidget.value || '';
+            }
+        }
+        return '';
+    };
 
-        if (!currentFile) {
-            const files = await loadOutfitFiles();
+    // 初始化时恢复保存的路径
+    const savedPath = stateManager.getPath();
+    if (savedPath && node.widgets) {
+        const pathWidget = node.widgets.find(w => w.name === '文件路径(Path)');
+        if (pathWidget) {
+            pathWidget.value = savedPath;
+            currentPath = savedPath;
+        }
+    }
+
+    const loadAndRender = async (forceRefresh = false) => {
+        infoBar.innerText = t('loading');
+        
+        const previousPath = currentPath;
+        currentPath = getCurrentPath();
+
+        // 如果路径发生变化或强制刷新，重新加载文件列表
+        if (forceRefresh || previousPath !== currentPath || !currentPath) {
+            // 如果路径为空，使用默认路径
+            if (!currentPath) {
+                currentPath = getCurrentPath();
+            }
+            
+            const files = await loadOutfitFiles(currentPath);
+            
+            // 更新文件下拉菜单
+            if (node.widgets && node.widgets[1]) {
+                const fileWidget = node.widgets[1];
+                if (fileWidget.options) {
+                    fileWidget.options.values = files;
+                }
+                if (fileWidget.menu) {
+                    fileWidget.menu.items = files.map(f => ({content: f}));
+                }
+            }
+            
+            // 如果当前文件不在新路径中，选择第一个文件
+            if (!files.includes(currentFile) || !currentFile) {
+                currentFile = files.length > 0 ? files[0] : '';
+                if (node.widgets && node.widgets[1]) {
+                    node.widgets[1].value = currentFile;
+                }
+            }
+        } else if (!currentFile) {
+            // 路径没变化，但没有选中文件
+            const files = await loadOutfitFiles(currentPath);
             if (files.length > 0) {
                 currentFile = files[0];
-                if (node.widgets && node.widgets[0]) {
-                    node.widgets[0].value = currentFile;
+                if (node.widgets && node.widgets[1]) {
+                    node.widgets[1].value = currentFile;
                 }
             }
         }
 
         if (currentFile) {
             stateManager.saveFile(currentFile);
-            const data = await loadOutfitCategories(currentFile);
+            const data = await loadOutfitCategories(currentFile, currentPath);
             allItems = data.items || [];
             currentCategories = data.categories || [];
             currentFields = data.fields || [];
@@ -1385,10 +1446,10 @@ export function createOutfitWidget(node, filename, topOffset) {
     };
 
     const handleCreate = async (data, newLabels = {}) => {
-        const result = await saveOutfitItem(currentFile, data);
+        const result = await saveOutfitItem(currentFile, data, currentPath);
         if (result.success) {
             if (Object.keys(newLabels).length > 0) {
-                await saveFieldLabels(currentFile, newLabels);
+                await saveFieldLabels(currentFile, newLabels, currentPath);
             }
             await loadAndRender();
         }
@@ -1397,10 +1458,7 @@ export function createOutfitWidget(node, filename, topOffset) {
     const handleSave = async (data) => {
         if (!selectedItem) return;
 
-        console.log('[DEBUG] handleSave - data:', data);
-        console.log('[DEBUG] handleSave - currentFile:', currentFile);
-        
-        const result = await saveOutfitItem(currentFile, data);
+        const result = await saveOutfitItem(currentFile, data, currentPath);
         if (result.success) {
             // 更新 selectedItem 为新的数据
             const updatedItem = { ...selectedItem };
@@ -1417,16 +1475,16 @@ export function createOutfitWidget(node, filename, topOffset) {
     const handleDelete = async () => {
         if (!selectedItem) return;
 
-        const result = await deleteOutfitItem(currentFile, selectedItem);
+        const result = await deleteOutfitItem(currentFile, selectedItem, currentPath);
         if (result.success) {
             selectedItem = null;
             
             // 检查文件是否还存在，如果不存在则更新文件下拉菜单
-            const files = await loadOutfitFiles();
+            const files = await loadOutfitFiles(currentPath);
             if (!files.includes(currentFile)) {
                 // 文件已被删除，更新文件下拉菜单
-                if (node.widgets && node.widgets[0]) {
-                    const fileWidget = node.widgets[0];
+                if (node.widgets && node.widgets[1]) {
+                    const fileWidget = node.widgets[1];
                     
                     if (fileWidget.options) {
                         fileWidget.options.values = files;
@@ -1455,15 +1513,12 @@ export function createOutfitWidget(node, filename, topOffset) {
     };
 
     const handleCreateNewFile = async (filename, category, item) => {
-        const result = await createOutfitFile(filename, category, item);
+        const result = await createOutfitFile(filename, category, item, currentPath);
         if (result.success) {
-            console.log('[DEBUG] handleCreateNewFile - result:', result);
-            
-            if (node.widgets && node.widgets[0]) {
-                const fileWidget = node.widgets[0];
+            if (node.widgets && node.widgets[1]) {
+                const fileWidget = node.widgets[1];
                 
-                const updatedFiles = await loadOutfitFiles();
-                console.log('[DEBUG] handleCreateNewFile - updatedFiles:', updatedFiles);
+                const updatedFiles = await loadOutfitFiles(currentPath);
                 
                 if (fileWidget.options) {
                     fileWidget.options.values = updatedFiles;
@@ -1475,14 +1530,12 @@ export function createOutfitWidget(node, filename, topOffset) {
                 const oldFile = currentFile;
                 currentFile = result.filename;
                 fileWidget.value = result.filename;
-                console.log('[DEBUG] handleCreateNewFile - currentFile set to:', currentFile);
                 
                 if (oldFile !== currentFile) {
                     stateManager.saveFile(currentFile);
                 }
             }
             
-            console.log('[DEBUG] handleCreateNewFile - calling loadAndRender with currentFile:', currentFile);
             await loadAndRender();
         } else {
             alert(result.error || t('fileExists'));
@@ -1542,9 +1595,7 @@ export function createOutfitWidget(node, filename, topOffset) {
         OutfitUI.showOutputOptionsModal(currentFields, outputFields, (selectedFields) => {
             outputFields = selectedFields;
             localStorage.setItem(`outfit_output_fields_${currentFile}`, JSON.stringify(outputFields));
-            console.log('[DEBUG] Output options saved:', outputFields);
             if (selectedItem) {
-                console.log('[DEBUG] Calling updateOutput after save');
                 updateOutput();
             }
         });
@@ -1585,8 +1636,8 @@ export function createOutfitWidget(node, filename, topOffset) {
         }, 0);
     });
 
-    if (node.widgets && node.widgets[0]) {
-        const fileWidget = node.widgets[0];
+    if (node.widgets && node.widgets[1]) {
+        const fileWidget = node.widgets[1];
         const originalCallback = fileWidget.callback;
         fileWidget.callback = function(value) {
             if (currentFile !== value) {
@@ -1594,6 +1645,18 @@ export function createOutfitWidget(node, filename, topOffset) {
                 loadAndRender();
             }
             if (originalCallback) originalCallback.apply(this, arguments);
+        };
+    }
+
+    const pathWidget = node.widgets?.find(w => w.name === '文件路径(Path)');
+    if (pathWidget) {
+        const originalPathCallback = pathWidget.callback;
+        pathWidget.callback = function(value) {
+            // 保存路径到 localStorage
+            stateManager.savePath(value);
+            // 路径变化时强制刷新
+            loadAndRender(true);
+            if (originalPathCallback) originalPathCallback.apply(this, arguments);
         };
     }
 
@@ -1612,7 +1675,8 @@ export function createOutfitWidget(node, filename, topOffset) {
         };
     }
 
-    loadAndRender();
+    // 强制刷新文件列表，确保使用当前保存的路径
+    loadAndRender(true);
 
     return { widget: container };
 }
