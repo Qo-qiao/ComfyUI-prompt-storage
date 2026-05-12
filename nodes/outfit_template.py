@@ -2,7 +2,7 @@
 """
 ComfyUI-prompt-storage - Outfit Template Module
 
-提示词选择器节点，支持从JSON文件加载穿搭方案并按分类筛选
+提示词选择器节点，支持从JSON文件加载提示词并按需求筛选输出
 
 Author: 亲卿于情 (@Qo-qiao)
 GitHub: https://github.com/Qo-qiao
@@ -21,6 +21,7 @@ class OutfitTemplate:
 
     @classmethod
     def INPUT_TYPES(cls):
+        # 获取当前目录下的JSON文件列表
         prompt_files = []
         if os.path.exists(PROMPT_DIR):
             for file in os.listdir(PROMPT_DIR):
@@ -31,7 +32,8 @@ class OutfitTemplate:
 
         return {
             "required": {
-                "文件(File)": (prompt_files,),
+                "文件路径(Path)": ("STRING", {"default": PROMPT_DIR, "multiline": False}),
+                "文件(File)": (prompt_files, {"default": default_file}),
             },
             "optional": {
                 "输出格式(Format)": (["json", "text"], {"default": "json"}),
@@ -46,22 +48,38 @@ class OutfitTemplate:
     RETURN_NAMES = ("输出",)
     FUNCTION = "load_outfit"
     CATEGORY = "prompt"
-    DESCRIPTION = "提示词选择器(Prompt Selector) - 加载和管理穿搭提示词"
+    DESCRIPTION = "提示词选择器(Prompt Selector) - 加载和管理提示词输出内容"
 
     def load_outfit(self, **kwargs):
+        文件路径_Path = kwargs.get('文件路径(Path)', kwargs.get('文件路径_Path', ''))
         文件_File = kwargs.get('文件(File)', kwargs.get('文件_File', ''))
         选中内容_Content = kwargs.get('选中内容(Content)', kwargs.get('选中内容_Content', ''))
         unique_id = kwargs.get('unique_id')
 
+        print(f"[OutfitTemplate] received path: '{文件路径_Path}'")
+        print(f"[OutfitTemplate] received file: '{文件_File}'")
         print(f"[OutfitTemplate] received selected_content: '{选中内容_Content}'")
 
+        # 如果有选中内容，直接使用
         if 选中内容_Content and 选中内容_Content.strip():
             content = 选中内容_Content.strip()
-            print(f"[OutfitTemplate] using selected content: '{content}'")
         else:
+            # 尝试从文件加载内容
             content = ""
-            print(f"[OutfitTemplate] no content selected, output empty string")
-
-        print(f"[OutfitTemplate] final content: '{content}'")
+            if 文件_File and 文件路径_Path:
+                try:
+                    file_path = os.path.join(文件路径_Path, 文件_File)
+                    if os.path.exists(file_path):
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                            # 尝试获取第一个可用的内容
+                            for key, value in data.items():
+                                if isinstance(value, dict) and 'styles' in value:
+                                    content = json.dumps(value, ensure_ascii=False)
+                                    break
+                            if not content:
+                                content = json.dumps(data, ensure_ascii=False)
+                except Exception as e:
+                    pass
 
         return (content,)

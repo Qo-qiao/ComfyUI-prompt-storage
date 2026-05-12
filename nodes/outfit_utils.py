@@ -17,11 +17,17 @@ from server import PromptServer
 PROMPT_DIR = os.path.join(os.path.dirname(__file__), "..", "prompt")
 os.makedirs(PROMPT_DIR, exist_ok=True)
 
-def get_prompt_file_path(filename):
+def get_prompt_file_path(filename, custom_path=None):
+    if custom_path and custom_path.strip():
+        return os.path.join(custom_path.strip(), filename)
     return os.path.join(PROMPT_DIR, filename)
 
-def load_prompt_data(filename):
-    file_path = get_prompt_file_path(filename)
+def get_prompt_dir(custom_path=None):
+    if custom_path and custom_path.strip():
+        return custom_path.strip()
+    return PROMPT_DIR
+
+def load_prompt_data(file_path):
     if os.path.exists(file_path):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -32,9 +38,11 @@ def load_prompt_data(filename):
 
 @PromptServer.instance.routes.get("/comfyui-prompt-storage/outfit/files")
 async def api_get_outfit_files(request):
+    custom_path = request.rel_url.query.get("path", "")
+    prompt_dir = get_prompt_dir(custom_path)
     files = []
-    if os.path.exists(PROMPT_DIR):
-        for file in os.listdir(PROMPT_DIR):
+    if os.path.exists(prompt_dir):
+        for file in os.listdir(prompt_dir):
             if file.lower().endswith('.json'):
                 files.append(file)
     return web.json_response(files)
@@ -42,11 +50,12 @@ async def api_get_outfit_files(request):
 @PromptServer.instance.routes.get("/comfyui-prompt-storage/outfit/data")
 async def api_get_outfit_data(request):
     filename = request.rel_url.query.get("filename", "")
+    custom_path = request.rel_url.query.get("path", "")
 
     if not filename:
         return web.json_response({"error": "未提供文件名"}, status=400)
 
-    file_path = get_prompt_file_path(filename)
+    file_path = get_prompt_file_path(filename, custom_path)
     if not os.path.exists(file_path):
         return web.json_response({"error": "文件不存在"}, status=404)
 
@@ -60,11 +69,13 @@ async def api_get_outfit_data(request):
 @PromptServer.instance.routes.get("/comfyui-prompt-storage/outfit/categories")
 async def api_get_outfit_categories(request):
     filename = request.rel_url.query.get("filename", "")
+    custom_path = request.rel_url.query.get("path", "")
 
     if not filename:
         return web.json_response({"categories": [], "items": [], "fields": [], "fieldLabels": {}})
 
-    data = load_prompt_data(filename)
+    file_path = get_prompt_file_path(filename, custom_path)
+    data = load_prompt_data(file_path)
     categories = []
     items = []
     fields = []
@@ -118,11 +129,12 @@ async def api_save_outfit_item(request):
         data = await request.json()
         filename = data.get('filename', '')
         item = data.get('item', {})
+        custom_path = data.get('path', '')
 
         if not filename:
             return web.json_response({"error": "未提供文件名"}, status=400)
 
-        file_path = get_prompt_file_path(filename)
+        file_path = get_prompt_file_path(filename, custom_path)
         if not os.path.exists(file_path):
             return web.json_response({"error": "文件不存在"}, status=404)
 
@@ -283,11 +295,12 @@ async def api_delete_outfit_item(request):
         data = await request.json()
         filename = data.get('filename', '')
         item = data.get('item', {})
+        custom_path = data.get('path', '')
 
         if not filename:
             return web.json_response({"error": "未提供文件名"}, status=400)
 
-        file_path = get_prompt_file_path(filename)
+        file_path = get_prompt_file_path(filename, custom_path)
         if not os.path.exists(file_path):
             return web.json_response({"error": "文件不存在"}, status=404)
 
@@ -359,6 +372,7 @@ async def api_create_outfit_file(request):
         filename = data.get('filename', '')
         category = data.get('category', '')
         item = data.get('item', {})
+        custom_path = data.get('path', '')
 
         if not filename:
             return web.json_response({"error": "未提供文件名"}, status=400)
@@ -367,7 +381,7 @@ async def api_create_outfit_file(request):
         if not filename.lower().endswith('.json'):
             filename = filename + '.json'
 
-        file_path = get_prompt_file_path(filename)
+        file_path = get_prompt_file_path(filename, custom_path)
         if os.path.exists(file_path):
             return web.json_response({"error": "文件已存在"}, status=400)
 
@@ -417,11 +431,12 @@ async def api_save_field_labels(request):
         data = await request.json()
         filename = data.get('filename', '')
         field_labels = data.get('fieldLabels', {})
+        custom_path = data.get('path', '')
 
         if not filename:
             return web.json_response({"error": "未提供文件名"}, status=400)
 
-        file_path = get_prompt_file_path(filename)
+        file_path = get_prompt_file_path(filename, custom_path)
         if not os.path.exists(file_path):
             return web.json_response({"error": "文件不存在"}, status=404)
 
