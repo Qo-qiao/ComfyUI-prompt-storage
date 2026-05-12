@@ -31,16 +31,15 @@
     width: 95%;
     display: flex;
     flex-direction: column;
-    background: #222;
+    background: #1a1a1a;
     border-radius: 8px;
     overflow: hidden;
     padding: 10px;
     box-sizing: border-box;
-    color: #ddd;
-    font-family: Arial, sans-serif;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     gap: 10px;
     z-index: 1;
-    height: calc(100% - 20px);
 }
 
 /* 头部样式 */
@@ -48,8 +47,6 @@
     display: flex; 
     gap: 8px; 
     flex-shrink: 0; 
-    height: 28px; 
-    min-height: 28px; 
     align-items: center;
 }
 
@@ -191,7 +188,7 @@
     border-radius: 6px;
     color: #fff;
     padding: 8px 12px;
-    font-size: 12px;
+    font-size: 13px;
     outline: none;
     transition: border-color 0.2s ease;
     box-sizing: border-box;
@@ -202,11 +199,11 @@
 }
 
 .vl-search:focus {
-    border-color: #4AF;
+    border-color: #666;
 }
 
 .vl-search::placeholder {
-    color: #555;
+    color: #888;
 }
 
 /* 视图切换按钮 */
@@ -376,29 +373,27 @@
 
 /* 信息栏样式 */
 .vl-info-bar {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    background: #252525;
     color: #fff;
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 36px;
     flex-shrink: 0;
-    border-radius: 8px;
-    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    border: 1px solid #444;
     cursor: default;
     white-space: nowrap;
     overflow: hidden;
     padding: 0 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     transition: all 0.2s ease;
 }
 
 .vl-info-bar:hover {
-    border-color: #4a4a4a;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    background: #333;
 }
 
 /* 网格样式 */
@@ -410,8 +405,8 @@
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     grid-auto-rows: max-content;
     gap: 10px;
-    padding: 12px 8px 8px 8px;
-    border-top: 1px solid #3a3a3a;
+    padding: 8px;
+    background: #1a1a1a;
 }
 
 .vl-grid.list-mode {
@@ -420,12 +415,11 @@
 }
 
 .vl-grid::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 .vl-grid::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
+    background: #1a1a1a;
 }
 
 .vl-grid::-webkit-scrollbar-thumb {
@@ -1355,8 +1349,8 @@
 }
 
 .vl-filter-icon.active {
-    background: #4AF;
-    border-color: #4AF;
+    background: #388e3c;
+    border-color: #388e3c;
     color: #fff;
 }
 
@@ -1387,7 +1381,7 @@
 }
 
 .vl-filter-option.active {
-    background: #4AF;
+    background: #388e3c;
     color: #fff;
 }
 

@@ -254,7 +254,7 @@ class UI {
         // 标签筛选按钮
         const filterIcon = document.createElement("button");
         filterIcon.className = "vl-filter-icon";
-        filterIcon.innerHTML = "🏷️";
+        filterIcon.innerHTML = "&#9661;";
         filterIcon.title = t('filterByTag');
         
         searchWrapper.appendChild(filterIcon);
