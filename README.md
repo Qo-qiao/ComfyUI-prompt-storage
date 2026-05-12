@@ -36,6 +36,14 @@ ComfyUI-prompt-storage is a specialized ComfyUI plugin designed to manage and st
 - **Search function**: Quick search for templates
 - **File formats**: Supports reading TXT, JSON, MD format template files
 
+### Prompt Selector Node
+- **JSON file loading**: Loads and manages JSON format prompt files
+- **Category management**: Organize prompt templates by categories, filter and create by category
+- **New file creation**: Create new JSON format prompt files
+- **Edit/Delete**: Edit and delete prompt templates
+- **Output formats**: Supports multiple output formats (Text/JSON)
+- **Custom output fields**: Customize output field selection
+
 #### Preview Image
 ![Preview Image](./workflows/Image.png)
 
@@ -53,20 +61,35 @@ ComfyUI-prompt-storage is a specialized ComfyUI plugin designed to manage and st
 ### 2. Usage
 
 1. **Add the node to your workflow**:
-   - In ComfyUI, add the "Image Prompt Storage" or "Prompt Template" node from the "prompt" category
+   - In ComfyUI, add the desired node from the "prompt" category:
+     - "Image Prompt Storage" - for managing image prompts (cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/cache/` and `data/`)
+     - "Prompt Template" - for managing prompt templates (cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/templates/`)
+     - "Prompt Selector" - for loading and managing JSON format prompt files (cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/prompt/`)
 
 2. **Configure Image Prompt Storage Node**:
-   - Set the file path to the output directory (default is ComfyUI's output directory)
+   - Cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/cache/` and `data/`
+   - Set the file path to the output directory
    - Select an image file from the dropdown list
    - Click the "View" button to open the visual interface
 
 3. **Configure Prompt Template Node**:
+   - Default cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/templates/`
+   - Supports TXT, JSON, MD format template files
    - Click the "Manage Templates" button to open the template management interface
    - Create, edit, or delete templates
 
-4. **Use the output**:
-   - The node outputs positive and negative prompts
-   - Connect these outputs to other nodes that require prompt inputs
+4. **Configure Prompt Selector Node**:
+   - Default cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/prompt/`
+   - Only supports JSON format prompt files
+   - Select a JSON format prompt file from the dropdown list
+   - Select output format (Text or JSON)
+   - Click "New" button to create new card or new file
+   - Click "Edit" button to edit selected card
+   - Click "Output Options" to customize output fields
+
+5. **Use the output**:
+   - The node outputs prompt content
+   - Connect the output to other nodes that require prompt inputs
 
 ## Workflow Examples
 
@@ -86,29 +109,47 @@ ComfyUI-prompt-storage is a specialized ComfyUI plugin designed to manage and st
 3. Connect the template output to other nodes
 4. Execute the workflow
 
+### Using Prompt Selector
+
+1. Add the "Prompt Selector" node to your workflow
+2. Select a JSON prompt file from the file dropdown list
+3. Click "New" button to create new prompt card or new file
+4. Fill in title, category, and content in the popup dialog
+5. Select category or enter new category name
+6. Click "Save" to complete creation
+7. Select the desired prompt in the card list
+8. Connect the output to other nodes
+9. Execute the workflow
+
 ## Changelog
 
+#### v1.2.0
+- Added Prompt Selector node, supports loading and managing JSON format prompt files
+- Supports organizing prompt templates by categories, filter and create by category
+- Added new file creation function, supports creating new JSON format prompt files
+- Supports editing and deleting prompt templates
+- Supports multiple output formats (Text/JSON)
+- Supports custom output field selection
+- Fixed card deletion function issue
+- Fixed new card category saving issue
+
 #### v1.1.0
-- Added tag system, supports adding tags to images and filtering by tags
 - Added Prompt Template node, supports saving and managing prompt templates
+- Supports organizing templates by categories, quick search and apply
+- Supports reading TXT, JSON, MD format template files
 - Added card view and list view switching
 - Added mouse hover preview functionality
-- Added image left/right navigation buttons, supports keyboard navigation
-- Added edit functionality, supports editing filename, tags, style, and other information
-- Added positive prompt multi-select, negative prompt single-select functionality
 - Optimized interface display, supports Chinese/English bilingual
 - Optimized visual interface layout
 - Optimized button styles, unified green confirm button
-- Fixed issue where tags were lost after saving and reopening
-- Fixed issue where tags and negative prompts were not synced when switching images
-- Fixed issue with inconsistent backend API return data format
 - Fixed various known issues
 
 #### v1.0.0
-- Initial release
-- Basic functionality for loading media files and outputting prompts
-- Visual interface for browsing media files
-- Support for image files
+- Initial release of Image Prompt Storage node
+- Supports loading image files from output directory
+- Displays positive and negative prompts associated with image files
+- Supports multi-select for positive prompts, single-select for negative prompts
+- Provides visual preview interface for image files
 
 ## Acknowledgments
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI) @comfyanonymous
