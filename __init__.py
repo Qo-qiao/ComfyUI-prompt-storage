@@ -21,19 +21,22 @@ from .nodes.outfit_template import OutfitTemplate
 from .nodes.utils import register_routes
 from .nodes.template_utils import register_template_routes
 from .nodes.outfit_utils import register_outfit_routes
+from .nodes.text_modifier import TextModifier
 
 # 节点类映射 (决定了 ComfyUI 内部识别的节点 ID)
 NODE_CLASS_MAPPINGS = {
     "PromptStorage": PromptStorage,
     "PromptTemplate": PromptTemplate,
-    "OutfitTemplate": OutfitTemplate
+    "OutfitTemplate": OutfitTemplate,
+    "TextModifier": TextModifier
 }
 
 # 节点显示名称映射 (决定了 UI 上显示的标题)
 NODE_DISPLAY_NAME_MAPPINGS = {
     "PromptStorage": "提示词存储器",
     "PromptTemplate": "预设模板存储器",
-    "OutfitTemplate": "提示词选择器"
+    "OutfitTemplate": "提示词选择器",
+    "TextModifier": "文本修改器"
 }
 
 # 注册 API 路由
@@ -45,4 +48,4 @@ def setup(app):
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY", "setup"]
 
 # 版本信息
-VERSION = "1.2.0"
+VERSION = "1.3.0"

@@ -6,7 +6,7 @@ A ComfyUI plugin for managing and storing prompt information for images.
 
 ## Project Introduction
 
-ComfyUI-prompt-storage is a specialized ComfyUI plugin designed to manage and store prompt information for images. It allows users to load image files from the output directory, view their prompt details, and output prompt information for use in other nodes.
+ComfyUI-prompt-storage is a feature-rich ComfyUI plugin designed to manage and store prompt information for images, while also supporting text modification and processing. It provides multiple specialized nodes to help users efficiently manage prompts, templates, and perform text operations.
 
 ### Core Advantages
 - **Simple and intuitive**: Easy to use with a clear interface, supports Chinese/English bilingual display
@@ -14,7 +14,8 @@ ComfyUI-prompt-storage is a specialized ComfyUI plugin designed to manage and st
 - **Prompt management**: Displays and manages prompt information for image files, supports positive/negative prompt multi-select
 - **Tag system**: Supports adding tags to images for easy categorization and filtering
 - **Preset templates**: Supports saving and managing prompt templates for quick reuse
-- **Seamless integration**: Outputs prompts for use in other ComfyUI nodes
+- **Text processing**: Supports text replacement and appending operations, flexible text content handling
+- **Seamless integration**: Outputs prompts and text for use in other ComfyUI nodes
 - **Visual interface**: Provides visual preview of image files, supports card view and list view
 
 ## Core Features
@@ -44,6 +45,16 @@ ComfyUI-prompt-storage is a specialized ComfyUI plugin designed to manage and st
 - **Output formats**: Supports multiple output formats (Text/JSON)
 - **Custom output fields**: Customize output field selection
 
+### Text Modifier Node
+- **Input interface**: Receives external text content
+- **Text content**: Specifies the text to be replaced (as positioning marker); when appending, if empty, uses full text content for positioning
+- **Mode selection**: Supports three modes
+  - Replace: Replace the matched portion in full text with input content
+  - Append Before: Insert input content before the "Text Content" position
+  - Append After: Insert input content after the "Text Content" position
+- **Full text**: Complete text content
+- **Output**: Processed text content
+
 #### Preview Image
 ![Preview Image](./workflows/Image.png)
 
@@ -65,6 +76,7 @@ ComfyUI-prompt-storage is a specialized ComfyUI plugin designed to manage and st
      - "Image Prompt Storage" - for managing image prompts (cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/cache/` and `data/`)
      - "Prompt Template" - for managing prompt templates (cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/templates/`)
      - "Prompt Selector" - for loading and managing JSON format prompt files (cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/prompt/`)
+     - "Text Modifier" - for text replacement and appending operations
 
 2. **Configure Image Prompt Storage Node**:
    - Cache directory: `ComfyUI/custom_nodes/ComfyUI-prompt-storage/cache/` and `data/`
@@ -121,7 +133,22 @@ ComfyUI-prompt-storage is a specialized ComfyUI plugin designed to manage and st
 8. Connect the output to other nodes
 9. Execute the workflow
 
+### Using Text Modifier
+
+1. Add the "Text Modifier" node to your workflow
+2. Connect the input interface to text output from other nodes
+3. Enter the text to locate in the "Text Content" input box (optional)
+4. Select operation mode: Replace, Append Before, or Append After
+5. Enter the complete text content in the "Full Text" input box
+6. Connect the output to other nodes that require text input
+7. Execute the workflow
+
 ## Changelog
+
+#### v1.3.0
+- Added Text Modifier node, supports text replacement and appending operations
+- Supports three modes: Replace, Append Before, Append After
+- Supports receiving external text content through input interface
 
 #### v1.2.0
 - Added Prompt Selector node, supports loading and managing JSON format prompt files
