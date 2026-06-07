@@ -112,7 +112,7 @@ function generateDefaultLabel(fieldName) {
     }
 
     const words = fieldName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-    return lang === 'zh-CN' ? words + '(' + fieldName + ')' : words;
+    return lang === 'zh-CN' ? words : words;
 }
 
 function getFieldLabel(fieldName) {
@@ -120,7 +120,7 @@ function getFieldLabel(fieldName) {
     if (globalFieldLabels[fieldName]) {
         const label = globalFieldLabels[fieldName];
         if (lang === 'zh-CN') {
-            return label.zh + '(' + label.en + ')';
+            return label.zh;
         }
         return label.en;
     }
