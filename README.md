@@ -144,6 +144,10 @@ ComfyUI-prompt-storage is a feature-rich ComfyUI plugin designed to manage and s
 7. Execute the workflow
 
 ## Changelog
+#### v1.3.1
+- Fixed the issue of duplicate field names in the prompt selector node
+- Added exclusive reverse engineering preset templates
+- Added character expression prompt library and character hairstyle prompt library
 
 #### v1.3.0
 - Added Text Modifier node, supports text replacement and appending operations
