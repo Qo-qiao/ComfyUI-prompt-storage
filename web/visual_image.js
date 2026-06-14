@@ -42,7 +42,6 @@ const translations = {
         enterTags: '输入标签，用逗号分隔(Enter tags)',
         filterByTag: '按标签筛选(Filter by tag)',
         allTags: '所有标签(All tags)',
-        style: '风格(Style)',
         checkpoints: '大模型(Checkpoints)',
         lora: 'LORA',
         positivePrompt: '正向(Positive)',
@@ -58,7 +57,6 @@ const translations = {
         copyPositivePrompt: '复制正向提示词(Copy)',
         addPositivePrompt: '添加正向提示词(Add)',
         enterFilename: '输入文件名...(Enter filename)',
-        enterStyle: '输入风格...(Enter style)',
         enterCheckpoint: '输入检查点名称...(Enter checkpoint)',
         enterLora: '输入LoRA信息',
         enterPositivePrompt: '输入正向提示词...(Positive)',
@@ -389,7 +387,6 @@ class UI {
             // 支持多种字段名称
             const promptPositive = item.prompt_positive || item.prompt || '';
             const promptNegative = item.prompt_negative || item.negative_prompt || '';
-            const styleText = item.style || item.category || '';
             const checkpointsText = item.checkpoints || item.model || '';
             const loraText = item.lora || '';
             const samplerText = item.sampler || '';
@@ -400,8 +397,13 @@ class UI {
             let tooltipContent = `<div class="vl-tooltip-section"><div class="vl-tooltip-title">${t('positivePrompt')}</div><div class="vl-tooltip-text">${promptPositive || t('none')}</div></div>`;
             tooltipContent += `<div class="vl-tooltip-section"><div class="vl-tooltip-title">${t('negativePrompt')}</div><div class="vl-tooltip-text">${promptNegative || t('none')}</div></div>`;
 
+            // 添加标签显示
+            if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
+                const tagItems = item.tags.map(tag => `<span class="vl-tooltip-tag">${tag}</span>`).join('');
+                tooltipContent += `<div class="vl-tooltip-section"><div class="vl-tooltip-tags">${tagItems}</div></div>`;
+            }
+
             const metaItems = [];
-            if (styleText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('style')}:</span> ${styleText}</span>`);
             if (checkpointsText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('checkpoints')}:</span> ${checkpointsText}</span>`);
             if (loraText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('lora')}:</span> ${loraText}</span>`);
             if (samplerText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('sampler')}:</span> ${samplerText}</span>`);
@@ -456,13 +458,16 @@ class UI {
         listItem.dataset.name = item.name || '';
         listItem.onclick = onClick;
 
-        // 左侧图标/缩略图区域
-        const iconContainer = document.createElement("div");
-        iconContainer.className = "vl-list-item-icon";
+        // 左侧图片预览框
+        const previewBox = document.createElement("div");
+        previewBox.className = "vl-list-item-preview-box";
         
         if (item.imageUrl) {
             // 先显示加载占位符
-            iconContainer.innerHTML = "🖼️";
+            const placeholder = document.createElement("span");
+            placeholder.className = "placeholder";
+            placeholder.innerText = "🖼️";
+            previewBox.appendChild(placeholder);
             
             const img = document.createElement("img");
             img.style.display = "none";
@@ -476,39 +481,40 @@ class UI {
             const cacheKey = item.name || absoluteUrl;
             const cachedUrl = imageCacheManager.getCachedUrl(cacheKey);
             
-            console.log('[ListItem] Loading image:', absoluteUrl, 'Original:', item.imageUrl, 'Cached:', cachedUrl);
-            
             // 优先使用缓存的 URL
             const urlToUse = cachedUrl || absoluteUrl;
             img.src = urlToUse;
             img.loading = "lazy";
             img.onload = () => {
-                console.log('[ListItem] Image loaded successfully:', absoluteUrl);
                 // 只有在使用非缓存 URL 时才更新缓存
                 if (!cachedUrl) {
                     imageCacheManager.cacheUrl(cacheKey, absoluteUrl);
                 }
                 // 显示图片，移除占位符
                 img.style.display = "block";
-                iconContainer.innerHTML = '';
-                iconContainer.appendChild(img);
+                previewBox.innerHTML = '';
+                previewBox.appendChild(img);
                 if (onImageLoad) onImageLoad();
             };
             img.onerror = (e) => {
-                console.error('[ListItem] Failed to load image:', absoluteUrl, e);
                 // 图片加载失败时保持占位符
-                iconContainer.innerHTML = "🖼️";
+                previewBox.innerHTML = '<span class="placeholder">🖼️</span>';
             };
-            iconContainer.appendChild(img);
+            previewBox.appendChild(img);
         } else {
-            iconContainer.innerHTML = "🖼️";
+            const placeholder = document.createElement("span");
+            placeholder.className = "placeholder";
+            placeholder.innerText = "🖼️";
+            previewBox.appendChild(placeholder);
         }
         
-        listItem.appendChild(iconContainer);
-
-        // 右侧内容区域
-        const content = document.createElement("div");
-        content.className = "vl-list-item-content";
+        // 右侧内容包装器
+        const contentWrapper = document.createElement("div");
+        contentWrapper.className = "vl-list-item-content-wrapper";
+        
+        // 文件名区域（标题栏）
+        const nameHeader = document.createElement("div");
+        nameHeader.className = "vl-list-item-name-header";
         
         // 文件名（显示修改后的文件名）
         const nameEl = document.createElement("div");
@@ -517,90 +523,138 @@ class UI {
         const displayName = item.display_filename || (item.name ? item.name.split(/[/\\]/).pop() : '');
         nameEl.innerText = displayName;
         nameEl.title = displayName;
-        content.appendChild(nameEl);
+        nameHeader.appendChild(nameEl);
         
-        // 元信息行
-        const metaContainer = document.createElement("div");
-        metaContainer.className = "vl-list-item-meta-container";
+        // 标题栏右侧标签容器
+        const headerTagsContainer = document.createElement("div");
+        headerTagsContainer.className = "vl-list-item-header-tags";
         
-        // 风格标签信息（固定）
-        const styleText = item.style || item.category;
-        if (styleText && styleText.trim() !== '') {
-            const styleEl = document.createElement("div");
-            styleEl.className = "vl-list-item-style";
-            styleEl.innerHTML = `<span class="vl-list-item-style-icon">🎨</span><span>${styleText}</span>`;
-            metaContainer.appendChild(styleEl);
+        // 添加 tags 标签
+        if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
+            item.tags.slice(0, 3).forEach(tag => {
+                const tagEl = document.createElement("span");
+                tagEl.className = "vl-list-item-header-tag";
+                tagEl.innerText = tag;
+                headerTagsContainer.appendChild(tagEl);
+            });
+            if (item.tags.length > 3) {
+                const moreEl = document.createElement("span");
+                moreEl.className = "vl-list-item-header-tag vl-list-item-header-tag-more";
+                moreEl.innerText = `+${item.tags.length - 3}`;
+                headerTagsContainer.appendChild(moreEl);
+            }
         }
         
-        // 其他标签部分（滚动）
-        const scrollContainer = document.createElement("div");
-        scrollContainer.className = "vl-list-item-scroll-container";
+        nameHeader.appendChild(headerTagsContainer);
+        contentWrapper.appendChild(nameHeader);
         
-        // 创建标签文本容器
+        // 信息内容区域（预览图+元信息）
+        const infoContentWrapper = document.createElement("div");
+        infoContentWrapper.className = "vl-list-item-info-content-wrapper";
+        
+        // 左侧图片预览框（放在信息区内）
+        const metaContainer = document.createElement("div");
+        metaContainer.className = "vl-list-item-meta-container";
+        metaContainer.appendChild(previewBox);
+        
+        // 创建标签容器
         const tagsContainer = document.createElement("div");
         tagsContainer.className = "vl-list-item-tags";
         
-        // 模型标签信息
-        const modelText = item.checkpoints || item.model;
-        if (modelText && modelText.trim() !== '') {
+        // 调试：查看 item 对象结构
+        console.log('[createListItem] Item data:', item);
+        
+        // 1. 大模型（支持多种字段名称）
+        const modelText = item.checkpoints || item.model || item.checkpoint || '';
+        if (modelText && String(modelText).trim() !== '' && String(modelText).trim() !== 'None') {
             const modelSpan = document.createElement("span");
             modelSpan.className = "vl-list-item-tag";
-            modelSpan.innerText = `大模型：${modelText}`;
+            const text = String(modelText).trim();
+            const truncatedModel = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+            modelSpan.innerHTML = `<span class="vl-list-item-tag-label">Model:</span>${truncatedModel}`;
             tagsContainer.appendChild(modelSpan);
         }
         
-        // LoRA 标签信息
-        const loraText = item.lora;
-        if (loraText && loraText.trim() !== '') {
+        // 2. LoRA（支持多种字段名称）
+        const loraText = item.lora || item.LORA || '';
+        if (loraText && String(loraText).trim() !== '' && String(loraText).trim() !== 'None') {
             const loraSpan = document.createElement("span");
             loraSpan.className = "vl-list-item-tag";
-            loraSpan.innerText = `Lora：${loraText}`;
+            const text = String(loraText).trim();
+            const truncatedLora = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+            loraSpan.innerHTML = `<span class="vl-list-item-tag-label">LoRA:</span>${truncatedLora}`;
             tagsContainer.appendChild(loraSpan);
         }
         
-        // 采样器标签信息
-        const samplerText = item.sampler;
-        if (samplerText && samplerText.trim() !== '') {
-            const samplerSpan = document.createElement("span");
-            samplerSpan.className = "vl-list-item-tag";
-            samplerSpan.innerText = `采样器：${samplerText}`;
-            tagsContainer.appendChild(samplerSpan);
+        // 3. 正向提示词（支持多种字段名称）
+        const promptPositive = item.prompt_positive || item.prompt || item.POSITIVE || item.positive || '';
+        if (promptPositive && String(promptPositive).trim() !== '' && String(promptPositive).trim() !== 'None') {
+            const positiveSpan = document.createElement("span");
+            positiveSpan.className = "vl-list-item-tag";
+            const text = String(promptPositive).trim();
+            const truncatedPositive = text.substring(0, 60) + (text.length > 60 ? '...' : '');
+            positiveSpan.innerHTML = `<span class="vl-list-item-tag-label">Positive:</span>${truncatedPositive}`;
+            tagsContainer.appendChild(positiveSpan);
         }
         
-        // 调度器标签信息
-        const schedulerText = item.scheduler;
-        if (schedulerText && schedulerText.trim() !== '') {
-            const schedulerSpan = document.createElement("span");
-            schedulerSpan.className = "vl-list-item-tag";
-            schedulerSpan.innerText = `调度器：${schedulerText}`;
-            tagsContainer.appendChild(schedulerSpan);
+        // 4. 负向提示词（支持多种字段名称）
+        const promptNegative = item.prompt_negative || item.negative_prompt || item.NEGATIVE || item.negative || '';
+        if (promptNegative && String(promptNegative).trim() !== '' && String(promptNegative).trim() !== 'None') {
+            const negativeSpan = document.createElement("span");
+            negativeSpan.className = "vl-list-item-tag";
+            const text = String(promptNegative).trim();
+            const truncatedNegative = text.substring(0, 60) + (text.length > 60 ? '...' : '');
+            negativeSpan.innerHTML = `<span class="vl-list-item-tag-label">Negative:</span>${truncatedNegative}`;
+            tagsContainer.appendChild(negativeSpan);
         }
         
-        // 步数标签信息
-        const stepsText = item.steps;
-        if (stepsText && stepsText.trim() !== '') {
-            const stepsSpan = document.createElement("span");
-            stepsSpan.className = "vl-list-item-tag";
-            stepsSpan.innerText = `步数：${stepsText}`;
-            tagsContainer.appendChild(stepsSpan);
+        // 5. 采样器、调度器、步数、CFG（同一行显示）
+        const samplerText = item.sampler || '';
+        const schedulerText = item.scheduler || '';
+        const stepsText = item.steps || '';
+        const cfgText = item.cfg || '';
+        const hasSamplerOrScheduler = (samplerText && String(samplerText).trim() !== '' && String(samplerText).trim() !== 'None') || 
+            (schedulerText && String(schedulerText).trim() !== '' && String(schedulerText).trim() !== 'None');
+        const hasStepsOrCfg = (stepsText && String(stepsText).trim() !== '' && String(stepsText).trim() !== 'None') || 
+            (cfgText && String(cfgText).trim() !== '' && String(cfgText).trim() !== 'None');
+        
+        if (hasSamplerOrScheduler || hasStepsOrCfg) {
+            const samplerSchedulerSpan = document.createElement("span");
+            samplerSchedulerSpan.className = "vl-list-item-tag";
+            let samplerSchedulerContent = '';
+            if (samplerText && String(samplerText).trim() !== '' && String(samplerText).trim() !== 'None') {
+                samplerSchedulerContent += `<span class="vl-list-item-tag-label">Sampler:</span>${String(samplerText).trim()}`;
+            }
+            if (schedulerText && String(schedulerText).trim() !== '' && String(schedulerText).trim() !== 'None') {
+                if (samplerSchedulerContent) samplerSchedulerContent += ' | ';
+                samplerSchedulerContent += `<span class="vl-list-item-tag-label">Scheduler:</span>${String(schedulerText).trim()}`;
+            }
+            if (stepsText && String(stepsText).trim() !== '' && String(stepsText).trim() !== 'None') {
+                if (samplerSchedulerContent) samplerSchedulerContent += ' | ';
+                samplerSchedulerContent += `<span class="vl-list-item-tag-label">Steps:</span>${String(stepsText).trim()}`;
+            }
+            if (cfgText && String(cfgText).trim() !== '' && String(cfgText).trim() !== 'None') {
+                if (samplerSchedulerContent) samplerSchedulerContent += ' | ';
+                samplerSchedulerContent += `<span class="vl-list-item-tag-label">CFG:</span>${String(cfgText).trim()}`;
+            }
+            samplerSchedulerSpan.innerHTML = samplerSchedulerContent;
+            tagsContainer.appendChild(samplerSchedulerSpan);
         }
         
-        // CFG 标签信息
-        const cfgText = item.cfg;
-        if (cfgText && cfgText.trim() !== '') {
-            const cfgSpan = document.createElement("span");
-            cfgSpan.className = "vl-list-item-tag";
-            cfgSpan.innerText = `CFG：${cfgText}`;
-            tagsContainer.appendChild(cfgSpan);
+        // 如果没有任何标签，添加占位符
+        if (tagsContainer.children.length === 0) {
+            const placeholderSpan = document.createElement("span");
+            placeholderSpan.className = "vl-list-item-tag";
+            placeholderSpan.innerHTML = `<span class="vl-list-item-tag-label">Info:</span>无信息`;
+            tagsContainer.appendChild(placeholderSpan);
         }
         
-        // 将标签容器添加到滚动容器中
-        scrollContainer.appendChild(tagsContainer);
+        metaContainer.appendChild(tagsContainer);
         
-        // 组装容器
-        metaContainer.appendChild(scrollContainer);
-        content.appendChild(metaContainer);
-        listItem.appendChild(content);
+        // 将元信息添加到内容包装器，再添加到列表项
+        infoContentWrapper.appendChild(metaContainer);
+        contentWrapper.appendChild(infoContentWrapper);
+        listItem.appendChild(contentWrapper);
 
         // 添加鼠标悬停提示框（与卡片视图一致）
         listItem.addEventListener("mouseenter", (e) => {
@@ -611,7 +665,6 @@ class UI {
             // 支持多种字段名称
             const promptPositive = item.prompt_positive || item.prompt || '';
             const promptNegative = item.prompt_negative || item.negative_prompt || '';
-            const styleText = item.style || item.category || '';
             const checkpointsText = item.checkpoints || item.model || '';
             const loraText = item.lora || '';
             const samplerText = item.sampler || '';
@@ -622,8 +675,13 @@ class UI {
             let tooltipContent = `<div class="vl-tooltip-section"><div class="vl-tooltip-title">${t('positivePrompt')}</div><div class="vl-tooltip-text">${promptPositive || t('none')}</div></div>`;
             tooltipContent += `<div class="vl-tooltip-section"><div class="vl-tooltip-title">${t('negativePrompt')}</div><div class="vl-tooltip-text">${promptNegative || t('none')}</div></div>`;
 
+            // 添加标签显示
+            if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
+                const tagItems = item.tags.map(tag => `<span class="vl-tooltip-tag">${tag}</span>`).join('');
+                tooltipContent += `<div class="vl-tooltip-section"><div class="vl-tooltip-tags">${tagItems}</div></div>`;
+            }
+
             const metaItems = [];
-            if (styleText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('style')}:</span> ${styleText}</span>`);
             if (checkpointsText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('checkpoints')}:</span> ${checkpointsText}</span>`);
             if (loraText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('lora')}:</span> ${loraText}</span>`);
             if (samplerText) metaItems.push(`<span class="vl-tooltip-meta-item"><span class="vl-tooltip-meta-label">${t('sampler')}:</span> ${samplerText}</span>`);
@@ -961,11 +1019,6 @@ class UI {
                 <input type="text" class="vl-info-value vl-info-model-input" id="vl-tags" placeholder="${t('enterTags')}" value="" style="display: none;" />
             </div>
             <div class="vl-info-section">
-                <div class="vl-info-label">${t('style')}</div>
-                <div class="vl-info-value vl-info-text" id="vl-style-preview">${t('loading')}</div>
-                <input type="text" class="vl-info-value vl-info-model-input" id="vl-style" placeholder="${t('enterStyle')}" value="" style="display: none;" />
-            </div>
-            <div class="vl-info-section">
                 <div class="vl-info-label">${t('checkpoints')}</div>
                 <div class="vl-info-value vl-info-text" id="vl-checkpoints-preview"></div>
                 <input type="text" class="vl-info-value vl-info-model-input" id="vl-checkpoints" placeholder="${t('enterCheckpoint')}" value="" style="display: none;" />
@@ -1125,21 +1178,6 @@ class UI {
             }
             
             // 卡片样式
-            .vl-style-badge {
-                position: absolute;
-                bottom: 40px;
-                left: 5px;
-                background-color: rgba(0, 0, 0, 0.7);
-                color: white;
-                padding: 2px 6px;
-                border-radius: 4px;
-                font-size: 10px;
-                max-width: 45%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-            
             .vl-model-badge {
                 position: absolute;
                 bottom: 40px;
@@ -1335,12 +1373,6 @@ class UI {
                 });
             }
             
-            // 切换风格类型
-            const styleInput = document.getElementById('vl-style');
-            const stylePreview = document.getElementById('vl-style-preview');
-            if (styleInput) styleInput.style.display = display;
-            if (stylePreview) stylePreview.style.display = displayText;
-            
             // 切换检查点
             const checkpointsInput = document.getElementById('vl-checkpoints');
             const checkpointsPreview = document.getElementById('vl-checkpoints-preview');
@@ -1439,7 +1471,6 @@ class UI {
                 // 保存数据并返回预览模式
             const filenameInput = document.getElementById('vl-filename');
             const tagsInput = document.getElementById('vl-tags');
-            const styleText = document.getElementById('vl-style').value;
             const modelText = document.getElementById('vl-checkpoints').value;
             const loraText = document.getElementById('vl-lora').value;
                 
@@ -1478,7 +1509,6 @@ class UI {
                             original_filename: filename,
                             display_filename: filenameInput.value,
                             tags: tags,
-                            style: styleText,
                             model: modelText,
                             checkpoints: modelText,
                             lora: loraText,
@@ -1496,14 +1526,12 @@ class UI {
                         // 更新预览文本
                         const filenamePreview = document.getElementById('vl-filename-preview');
                         const tagsPreview = document.getElementById('vl-tags-preview');
-                        const stylePreview = document.getElementById('vl-style-preview');
                         const checkpointsPreview = document.getElementById('vl-checkpoints-preview');
                         const loraPreview = document.getElementById('vl-lora-preview');
                         const promptNegativePreview = document.getElementById('vl-prompt-negative-preview');
 
                         if (filenamePreview) filenamePreview.innerText = filenameInput.value || t('none');
                         if (tagsPreview) tagsPreview.innerText = tagsInput.value || t('none');
-                        if (stylePreview) stylePreview.innerText = styleText || t('none');
                         if (checkpointsPreview) checkpointsPreview.innerText = modelText || t('none');
                         if (loraPreview) loraPreview.innerText = loraText || t('none');
                         if (promptNegativePreview) promptNegativePreview.innerText = promptNegativeText || t('none');
@@ -1516,7 +1544,6 @@ class UI {
                             if (itemIndex !== -1) {
                                 allItems[itemIndex].display_filename = filenameInput.value;
                                 allItems[itemIndex].tags = tags;
-                                allItems[itemIndex].style = styleText;
                                 // 发送自定义事件，通知外部更新信息栏
                                 const event = new CustomEvent('filenameUpdated', {
                                     detail: {
@@ -1814,7 +1841,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         // 更新预览文本
         const filenamePreview = document.getElementById('vl-filename-preview');
         const tagsPreview = document.getElementById('vl-tags-preview');
-        const stylePreview = document.getElementById('vl-style-preview');
         const checkpointsPreview = document.getElementById('vl-checkpoints-preview');
         const loraPreview = document.getElementById('vl-lora-preview');
         const promptNegativePreview = document.getElementById('vl-prompt-negative-preview');
@@ -1826,7 +1852,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         console.log('[loadImageInfo] Element checks:', {
             filenamePreview: !!filenamePreview,
             tagsPreview: !!tagsPreview,
-            stylePreview: !!stylePreview,
             checkpointsPreview: !!checkpointsPreview,
             loraPreview: !!loraPreview,
             promptNegativePreview: !!promptNegativePreview,
@@ -1839,7 +1864,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         // 更新编辑输入框
         const filenameEl = document.getElementById('vl-filename');
         const tagsEl = document.getElementById('vl-tags');
-        const styleEl = document.getElementById('vl-style');
         const checkpointsEl = document.getElementById('vl-checkpoints');
         const loraEl = document.getElementById('vl-lora');
         const samplerEl = document.getElementById('vl-sampler');
@@ -1860,7 +1884,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         console.log('[loadImageInfo] Setting preview text with data:', {
             filename: data.display_filename || data.filename,
             tags: tagsArray,
-            style: data.style,
             model: data.model || data.checkpoints,
             lora: data.lora,
             prompt_negative: data.prompt_negative || data.negative_prompt,
@@ -1872,7 +1895,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
 
         if (filenamePreview) filenamePreview.innerText = data.display_filename || data.filename || t('none');
         if (tagsPreview) tagsPreview.innerText = (tagsArray.length > 0) ? tagsArray.join(', ') : t('none');
-        if (stylePreview) stylePreview.innerText = data.style || t('none');
         if (checkpointsPreview) checkpointsPreview.innerText = data.model || data.checkpoints || t('none');
         if (loraPreview) loraPreview.innerText = data.lora || t('none');
         if (promptNegativePreview) promptNegativePreview.innerText = data.prompt_negative || data.negative_prompt || t('none');
@@ -1887,7 +1909,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         // 设置编辑输入框的值
         if (filenameEl) filenameEl.value = data.display_filename || data.filename || '';
         if (tagsEl) tagsEl.value = (tagsArray.length > 0) ? tagsArray.join(', ') : '';
-        if (styleEl) styleEl.value = data.style || '';
         if (checkpointsEl) checkpointsEl.value = data.model || data.checkpoints || '';
         if (loraEl) loraEl.value = data.lora || '';
         if (samplerEl) samplerEl.value = data.sampler || '';
@@ -2134,7 +2155,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         // 即使 API 失败，也显示基本信息
         const filenamePreview = document.getElementById('vl-filename-preview');
         const filetypeEl = document.getElementById('vl-filetype');
-        const stylePreview = document.getElementById('vl-style-preview');
         const checkpointsPreview = document.getElementById('vl-checkpoints-preview');
         const loraPreview = document.getElementById('vl-lora-preview');
         const promptNegativePreview = document.getElementById('vl-prompt-negative-preview');
@@ -2144,7 +2164,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         const promptPositivePreviewContainer = document.getElementById('vl-prompt-positive-preview-container');
 
         const filenameEl = document.getElementById('vl-filename');
-        const styleEl = document.getElementById('vl-style');
         const checkpointsEl = document.getElementById('vl-checkpoints');
         const loraEl = document.getElementById('vl-lora');
         const promptNegativeEl = document.getElementById('vl-prompt-negative');
@@ -2155,7 +2174,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         // 设置预览文本
         if (filenamePreview) filenamePreview.innerText = filename || t('none');
         if (filetypeEl) filetypeEl.innerText = 'Image';
-        if (stylePreview) stylePreview.innerText = t('none');
         if (checkpointsPreview) checkpointsPreview.innerText = t('none');
         if (loraPreview) loraPreview.innerText = t('none');
         if (promptNegativePreview) promptNegativePreview.innerText = t('none');
@@ -2168,7 +2186,6 @@ async function loadImageInfo(filename, path, toggleEditMode, node = null) {
         
         // 设置编辑输入框
         if (filenameEl) filenameEl.value = filename || '';
-        if (styleEl) styleEl.value = '';
         if (checkpointsEl) checkpointsEl.value = '';
         if (loraEl) loraEl.value = '';
         if (promptNegativeEl) promptNegativeEl.value = '';

@@ -1,3 +1,4 @@
+/* 主容器样式 */
 .ot-container {
     position: absolute;
     left: 0;
@@ -11,22 +12,26 @@
     overflow: hidden;
 }
 
+/* 头部区域样式 */
 .ot-header {
     padding: 10px;
     background: #252525;
     border-bottom: 1px solid #333;
 }
 
+/* 控制栏容器 */
 .ot-controls-wrapper {
     display: flex;
     gap: 8px;
     align-items: center;
 }
 
+/* 搜索框容器 */
 .ot-search-wrapper {
     flex: 1;
 }
 
+/* 搜索框样式 */
 .ot-search {
     width: 100%;
     padding: 8px 12px;
@@ -47,6 +52,7 @@
     color: #888;
 }
 
+/* 筛选按钮样式 */
 .ot-filter-btn {
     padding: 8px 12px;
     border: 1px solid #444;
@@ -69,6 +75,7 @@
     border-color: #388e3c;
 }
 
+/* 筛选下拉菜单样式 */
 .ot-filter-dropdown {
     position: fixed;
     background: #252525;
@@ -97,8 +104,7 @@
     color: #fff;
 }
 
-
-
+/* 视图切换按钮组 */
 .ot-view-toggle {
     display: flex;
     background: #1a1a1a;
@@ -136,6 +142,7 @@
     color: #4AF;
 }
 
+/* 网格图标样式 */
 .ot-grid-icon {
     display: inline-block;
     width: 14px;
@@ -166,6 +173,7 @@
     transform: translateX(-50%);
 }
 
+/* 信息栏样式 */
 .ot-info-bar {
     padding: 8px 12px;
     background: #1e1e1e;
@@ -177,6 +185,7 @@
     text-overflow: ellipsis;
 }
 
+/* 列表容器样式 */
 .ot-list {
     flex: 1;
     overflow-y: auto;
@@ -184,6 +193,7 @@
     background: #1a1a1a;
 }
 
+/* 网格视图模式 */
 .ot-list.ot-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
@@ -193,6 +203,7 @@
     align-content: flex-start !important;
 }
 
+/* 网格卡片样式 */
 .ot-list.ot-grid .ot-grid-card {
     display: block !important;
     background: #2a2a2a;
@@ -246,6 +257,7 @@
     display: none !important;
 }
 
+/* 自定义滚动条样式 */
 .ot-list::-webkit-scrollbar {
     width: 6px;
 }
@@ -263,6 +275,7 @@
     background: #555;
 }
 
+/* 列表项样式 */
 .ot-list-item {
     margin-bottom: 6px;
     background: #2a2a2a;
@@ -283,6 +296,7 @@
     border-color: #4AF;
 }
 
+/* 列表项标题行 */
 .ot-list-item-title-row {
     display: flex;
     align-items: center;
@@ -290,6 +304,7 @@
     padding: 12px;
 }
 
+/* 列表项标题 */
 .ot-list-item-title {
     font-size: 14px;
     font-weight: 500;
@@ -301,6 +316,7 @@
     margin-right: 8px;
 }
 
+/* 列表项分类标签 */
 .ot-list-item-category {
     flex-shrink: 0;
     padding: 2px 8px;
@@ -310,11 +326,13 @@
     color: #ffffff;
 }
 
+/* 列表项内容区域 */
 .ot-list-item-content {
     background: #252525;
     padding: 0 12px 12px;
 }
 
+/* 列表项预览文本 */
 .ot-list-item-preview {
     font-size: 12px;
     color: #aaa;
@@ -322,12 +340,14 @@
     padding-top: 8px;
 }
 
+/* 列表项详细信息 */
 .ot-list-item-detail {
     font-size: 11px;
     color: #666;
     line-height: 1.4;
 }
 
+/* 列表项字段 */
 .ot-list-item-field {
     font-size: 11px;
     color: #888;
@@ -337,6 +357,7 @@
     text-overflow: ellipsis;
 }
 
+/* 空状态样式 */
 .ot-empty {
     text-align: center;
     padding: 40px 20px;
@@ -344,6 +365,7 @@
     font-size: 14px;
 }
 
+/* 底部按钮区域 */
 .ot-footer {
     padding: 10px;
     background: #252525;
@@ -357,6 +379,7 @@
     padding: 10px;
 }
 
+/* 按钮基础样式 */
 .ot-btn {
     padding: 8px 16px;
     border: 1px solid #444;
@@ -373,6 +396,7 @@
     border-color: #555;
 }
 
+/* 主要按钮样式 */
 .ot-btn-primary {
     background: #4CAF50;
     border-color: #4CAF50;
@@ -384,6 +408,7 @@
     border-color: #66BB6A;
 }
 
+/* 危险按钮样式 */
 .ot-btn-danger {
     background: #ef5350;
     border-color: #ef5350;
@@ -395,6 +420,7 @@
     border-color: #e57373;
 }
 
+/* 模态框遮罩层 */
 .ot-modal-overlay {
     position: fixed;
     top: 0;
@@ -408,6 +434,7 @@
     z-index: 10000;
 }
 
+/* 模态框主体 */
 .ot-modal {
     background: #1a1a1a;
     border-radius: 8px;
@@ -418,6 +445,7 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
+/* 模态框头部 */
 .ot-modal-header {
     padding: 16px 20px;
     background: #252525;
@@ -427,12 +455,14 @@
     color: #fff;
 }
 
+/* 模态框内容区域 */
 .ot-modal-content {
     padding: 20px;
     max-height: calc(90vh - 140px);
     overflow-y: auto;
 }
 
+/* 模态框字段 */
 .ot-modal-field {
     margin-bottom: 16px;
 }
@@ -444,6 +474,7 @@
     color: #aaa;
 }
 
+/* 模态框输入框样式 */
 .ot-modal-input,
 .ot-modal-select {
     width: 100%;
@@ -471,6 +502,7 @@
     color: #fff;
 }
 
+/* 组合框样式 */
 .ot-modal-combobox-wrapper {
     display: flex;
     gap: 8px;
@@ -506,6 +538,7 @@
     color: #666;
 }
 
+/* 模态框文本域 */
 .ot-modal-textarea {
     width: 100%;
     padding: 10px 12px;
@@ -523,6 +556,7 @@
     border-color: #666;
 }
 
+/* 工具提示样式 */
 .ot-tooltip {
     position: fixed;
     z-index: 99999;
@@ -577,6 +611,7 @@
     color: #666;
 }
 
+/* 模态框底部 */
 .ot-modal-footer {
     padding: 12px 20px;
     background: #252525;
@@ -586,6 +621,7 @@
     justify-content: flex-end;
 }
 
+/* 模态框分隔线 */
 .ot-modal-divider {
     margin: 24px -20px 20px;
     padding: 0 20px;
@@ -602,6 +638,7 @@
     color: #888;
 }
 
+/* 复选框字段 */
 .ot-modal-checkbox-field {
     display: flex;
     align-items: center;
@@ -633,6 +670,7 @@
     font-size: 14px;
 }
 
+/* 次要按钮样式 */
 .ot-btn-secondary {
     background: #333;
     border-color: #444;
@@ -644,6 +682,7 @@
     border-color: #555;
 }
 
+/* 输出按钮包装器 */
 .ot-output-buttons-wrapper {
     display: flex;
     gap: 8px;
@@ -654,6 +693,7 @@
     flex: 1;
 }
 
+/* 字段组包装器 */
 .ot-field-group-wrapper {
     margin-bottom: 16px;
 }
@@ -681,6 +721,7 @@
     margin-bottom: 0;
 }
 
+/* 字段标签输入组 */
 .ot-field-label-input-group {
     display: flex;
     gap: 8px;
@@ -708,6 +749,7 @@
     display: block;
 }
 
+/* 新建菜单样式 */
 .ot-new-menu {
     position: fixed;
     background: #252525;
