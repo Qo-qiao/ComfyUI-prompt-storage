@@ -5,6 +5,7 @@ class ImageCacheManager {
     constructor() {
         this.cache = new Map();
         this.maxCacheSize = 50; // 最大缓存数量
+        this.pendingChecks = new Map(); // 正在检查的缓存
     }
 
     // 获取缓存的图片URL
@@ -26,10 +27,96 @@ class ImageCacheManager {
     clearCache() {
         this.cache.clear();
     }
+
+    // 检查后端缓存是否已创建
+    async checkBackendCache(filename, maxAttempts = 10, interval = 500) {
+        const cacheKey = `backend_check_${filename}`;
+        
+        // 如果已经在检查中，返回相同的 Promise
+        if (this.pendingChecks.has(cacheKey)) {
+            return this.pendingChecks.get(cacheKey);
+        }
+
+        const checkPromise = new Promise((resolve) => {
+            let attempts = 0;
+
+            const check = async () => {
+                attempts++;
+                try {
+                    // 生成缓存文件名
+                    const hashName = await this.generateHash(filename);
+                    const cacheFilename = hashName + ".png";
+                    const cacheUrl = `/comfyui-image-prompt/view-cache?filename=${cacheFilename}`;
+
+                    // 尝试加载缓存图片
+                    const response = await fetch(cacheUrl, { method: 'HEAD' });
+                    
+                    if (response.ok) {
+                        console.log('[ImageCacheManager] Backend cache found:', filename);
+                        this.cacheUrl(filename, cacheUrl);
+                        resolve(cacheUrl);
+                        this.pendingChecks.delete(cacheKey);
+                        return;
+                    }
+
+                    // 缓存未创建，继续检查
+                    if (attempts < maxAttempts) {
+                        setTimeout(check, interval);
+                    } else {
+                        console.log('[ImageCacheManager] Backend cache not found after max attempts:', filename);
+                        resolve(null);
+                        this.pendingChecks.delete(cacheKey);
+                    }
+                } catch (error) {
+                    console.error('[ImageCacheManager] Error checking backend cache:', error);
+                    if (attempts < maxAttempts) {
+                        setTimeout(check, interval);
+                    } else {
+                        resolve(null);
+                        this.pendingChecks.delete(cacheKey);
+                    }
+                }
+            };
+
+            check();
+        });
+
+        this.pendingChecks.set(cacheKey, checkPromise);
+        return checkPromise;
+    }
+
+    // 生成文件名的哈希（与后端一致）
+    async generateHash(filename) {
+        // 使用 SHA-256 代替 MD5（Web Crypto API 不支持 MD5）
+        const encoder = new TextEncoder();
+        const data = encoder.encode(filename);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+    }
 }
 
 // 创建全局缓存管理器实例
 const imageCacheManager = new ImageCacheManager();
+
+// 检查并切换到缓存图片
+async function checkAndSwitchToCache(imgElement, filename, originalUrl, cacheKey) {
+    try {
+        // 检查后端缓存是否已创建
+        const cacheUrl = await imageCacheManager.checkBackendCache(filename);
+        
+        if (cacheUrl) {
+            console.log('[checkAndSwitchToCache] Switching to cached image:', filename);
+            // 切换到缓存图片
+            imgElement.src = cacheUrl;
+            // 更新缓存管理器
+            imageCacheManager.cacheUrl(cacheKey, cacheUrl);
+        }
+    } catch (error) {
+        console.error('[checkAndSwitchToCache] Error:', error);
+    }
+}
 
 // 国际化翻译
 const translations = {
@@ -333,6 +420,10 @@ class UI {
             const urlToUse = cachedUrl || absoluteUrl;
             img.src = urlToUse;
             img.loading = "lazy";
+            
+            // 标记是否使用了原始路径（大图）
+            const usingOriginalPath = !cachedUrl;
+            
             img.onload = () => {
                 console.log('[ImageCard] Image loaded successfully:', absoluteUrl);
                 // 只有在使用非缓存 URL 时才更新缓存
@@ -345,6 +436,11 @@ class UI {
                     loadingPlaceholder.style.display = "none";
                 }
                 if (onImageLoad) onImageLoad();
+                
+                // 如果使用的是原始路径（大图），启动后台检查缓存
+                if (usingOriginalPath && item.name) {
+                    checkAndSwitchToCache(img, item.name, absoluteUrl, cacheKey);
+                }
             };
             img.onerror = (e) => {
                 console.error('[ImageCard] Failed to load image:', absoluteUrl, e);
@@ -463,49 +559,81 @@ class UI {
         previewBox.className = "vl-list-item-preview-box";
         
         if (item.imageUrl) {
-            // 先显示加载占位符
-            const placeholder = document.createElement("span");
-            placeholder.className = "placeholder";
-            placeholder.innerText = "🖼️";
-            previewBox.appendChild(placeholder);
+            // 创建加载占位符（与卡片模式一致）
+            const loadingPlaceholder = document.createElement("div");
+            loadingPlaceholder.className = "vl-image-loading";
+            loadingPlaceholder.style.backgroundColor = "#333";
+            loadingPlaceholder.style.height = "100%";
+            loadingPlaceholder.style.width = "100%";
+            loadingPlaceholder.style.display = "flex";
+            loadingPlaceholder.style.alignItems = "center";
+            loadingPlaceholder.style.justifyContent = "center";
+            loadingPlaceholder.style.color = "#666";
+            loadingPlaceholder.style.fontSize = "24px";
+            loadingPlaceholder.innerHTML = "🖼️";
+            previewBox.appendChild(loadingPlaceholder);
             
             const img = document.createElement("img");
             img.style.display = "none";
             
+            // 确保使用绝对 URL（与卡片模式一致）
             let absoluteUrl = item.imageUrl;
             if (absoluteUrl.startsWith('/')) {
                 absoluteUrl = window.location.origin + absoluteUrl;
             }
             
-            // 检查缓存
+            // 检查缓存（与卡片模式使用相同的缓存键）
             const cacheKey = item.name || absoluteUrl;
             const cachedUrl = imageCacheManager.getCachedUrl(cacheKey);
             
-            // 优先使用缓存的 URL
+            // 优先使用缓存的 URL（与卡片模式一致）
             const urlToUse = cachedUrl || absoluteUrl;
             img.src = urlToUse;
             img.loading = "lazy";
+            
+            // 标记是否使用了原始路径（大图）
+            const usingOriginalPath = !cachedUrl;
+            
             img.onload = () => {
-                // 只有在使用非缓存 URL 时才更新缓存
+                // 只有在使用非缓存 URL 时才更新缓存（与卡片模式一致）
                 if (!cachedUrl) {
                     imageCacheManager.cacheUrl(cacheKey, absoluteUrl);
                 }
-                // 显示图片，移除占位符
+                // 显示图片，隐藏占位符（与卡片模式一致，不重新创建 DOM）
                 img.style.display = "block";
-                previewBox.innerHTML = '';
-                previewBox.appendChild(img);
+                if (loadingPlaceholder) {
+                    loadingPlaceholder.style.display = "none";
+                }
                 if (onImageLoad) onImageLoad();
+                
+                // 如果使用的是原始路径（大图），启动后台检查缓存
+                if (usingOriginalPath && item.name) {
+                    checkAndSwitchToCache(img, item.name, absoluteUrl, cacheKey);
+                }
             };
             img.onerror = (e) => {
-                // 图片加载失败时保持占位符
-                previewBox.innerHTML = '<span class="placeholder">🖼️</span>';
+                // 图片加载失败时保持占位符（与卡片模式一致）
+                if (img) {
+                    img.style.display = "none";
+                }
+                if (loadingPlaceholder) {
+                    loadingPlaceholder.style.display = "flex";
+                }
             };
             previewBox.appendChild(img);
         } else {
-            const placeholder = document.createElement("span");
-            placeholder.className = "placeholder";
-            placeholder.innerText = "🖼️";
-            previewBox.appendChild(placeholder);
+            const loadingPlaceholder = document.createElement("div");
+            loadingPlaceholder.className = "vl-image-loading";
+            loadingPlaceholder.style.backgroundColor = "#333";
+            loadingPlaceholder.style.height = "100%";
+            loadingPlaceholder.style.width = "100%";
+            loadingPlaceholder.style.display = "flex";
+            loadingPlaceholder.style.alignItems = "center";
+            loadingPlaceholder.style.justifyContent = "center";
+            loadingPlaceholder.style.color = "#666";
+            loadingPlaceholder.style.fontSize = "24px";
+            loadingPlaceholder.innerHTML = "🖼️";
+            previewBox.appendChild(loadingPlaceholder);
         }
         
         // 右侧内容包装器
