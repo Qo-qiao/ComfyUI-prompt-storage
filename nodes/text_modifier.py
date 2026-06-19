@@ -17,9 +17,9 @@ class TextModifier:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "文本内容(Text)": ("STRING", {"default": "", "multiline": True}),
+                "定位文本(Anchor Text)": ("STRING", {"default": "", "multiline": True}),
                 "模式(Mode)": (["替换(Replace)", "追加文本前(Append Before)", "追加文本后(Append After)"], {"default": "替换(Replace)"}),
-                "整段文本(Full Text)": ("STRING", {"default": "", "multiline": True}),
+                "追加替换文本(Append/Replace Text)": ("STRING", {"default": "", "multiline": True}),
             },
             "optional": {
                 "输入": ("*",),
@@ -37,41 +37,41 @@ class TextModifier:
 
     def modify_text(self, **kwargs):
         输入 = kwargs.get('输入', '')
-        文本内容_Text = kwargs.get('文本内容(Text)', kwargs.get('文本内容_Text', ''))
+        定位文本_AnchorText = kwargs.get('定位文本(Anchor Text)', kwargs.get('定位文本_AnchorText', ''))
         模式_Mode = kwargs.get('模式(Mode)', kwargs.get('模式_Mode', '替换(Replace)'))
-        整段文本_FullText = kwargs.get('整段文本(Full Text)', kwargs.get('整段文本_FullText', ''))
+        追加替换文本_AppendReplaceText = kwargs.get('追加替换文本(Append/Replace Text)', kwargs.get('追加替换文本_AppendReplaceText', ''))
         unique_id = kwargs.get('unique_id')
 
         print(f"[TextModifier] received input: '{输入}'")
-        print(f"[TextModifier] received text: '{文本内容_Text}'")
+        print(f"[TextModifier] received anchor_text: '{定位文本_AnchorText}'")
         print(f"[TextModifier] received mode: '{模式_Mode}'")
-        print(f"[TextModifier] received full_text: '{整段文本_FullText}'")
+        print(f"[TextModifier] received append_replace_text: '{追加替换文本_AppendReplaceText}'")
 
         if 输入 == "":
-            result = 整段文本_FullText
+            result = 追加替换文本_AppendReplaceText
         elif 模式_Mode == "替换(Replace)":
-            if 文本内容_Text == "":
-                result = 整段文本_FullText
+            if 定位文本_AnchorText == "":
+                result = 输入
             else:
-                result = 整段文本_FullText.replace(文本内容_Text, 输入)
+                result = 输入.replace(定位文本_AnchorText, 追加替换文本_AppendReplaceText)
         elif 模式_Mode == "追加文本前(Append Before)":
-            if 文本内容_Text == "":
-                result = 输入 + 整段文本_FullText
+            if 定位文本_AnchorText == "":
+                result = 追加替换文本_AppendReplaceText + 输入
             else:
-                idx = 整段文本_FullText.find(文本内容_Text)
+                idx = 输入.find(定位文本_AnchorText)
                 if idx != -1:
-                    result = 整段文本_FullText[:idx] + 输入 + 整段文本_FullText[idx:]
+                    result = 输入[:idx] + 追加替换文本_AppendReplaceText + 输入[idx:]
                 else:
-                    result = 输入 + 整段文本_FullText
+                    result = 追加替换文本_AppendReplaceText + 输入
         else:
-            if 文本内容_Text == "":
-                result = 整段文本_FullText + 输入
+            if 定位文本_AnchorText == "":
+                result = 输入 + 追加替换文本_AppendReplaceText
             else:
-                idx = 整段文本_FullText.find(文本内容_Text)
+                idx = 输入.find(定位文本_AnchorText)
                 if idx != -1:
-                    result = 整段文本_FullText[:idx + len(文本内容_Text)] + 输入 + 整段文本_FullText[idx + len(文本内容_Text):]
+                    result = 输入[:idx + len(定位文本_AnchorText)] + 追加替换文本_AppendReplaceText + 输入[idx + len(定位文本_AnchorText):]
                 else:
-                    result = 整段文本_FullText + 输入
+                    result = 输入 + 追加替换文本_AppendReplaceText
 
         print(f"[TextModifier] output: '{result}'")
         return (result,)

@@ -18,6 +18,8 @@ from aiohttp import web
 from PIL import Image
 import hashlib
 from server import PromptServer
+import asyncio
+import threading
 
 # 数据存储目录（JSON 文件存储位置）
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
@@ -58,20 +60,38 @@ def save_image_data(filename, data):
 
 # 获取并缓存图片的函数
 def get_cached_image_path(image_path):
-    """获取图片的缓存路径"""
+    """获取图片的缓存路径（仅检查缓存是否存在，不阻塞创建）"""
     if not image_path or not os.path.exists(image_path):
         return None
     
-    # 生成缓存文件名
-    hash_name = hashlib.md5(image_path.encode('utf-8')).hexdigest()
+    # 生成缓存文件名（使用 SHA-256 与前端保持一致）
+    hash_name = hashlib.sha256(image_path.encode('utf-8')).hexdigest()
     cache_filename = hash_name + ".png"
     cache_path = os.path.join(CACHE_DIR, cache_filename)
     
     # 转换为 Web 访问路径
     web_path = f"/comfyui-image-prompt/view-cache?filename={cache_filename}"
 
+    # 仅检查缓存是否存在，不阻塞创建
     if os.path.exists(cache_path):
         return web_path
+
+    # 缓存不存在，返回 None，让调用者使用原始路径
+    return None
+
+def create_image_cache(image_path):
+    """在后台创建图片缓存"""
+    if not image_path or not os.path.exists(image_path):
+        return False
+    
+    # 生成缓存文件名（使用 SHA-256 与前端保持一致）
+    hash_name = hashlib.sha256(image_path.encode('utf-8')).hexdigest()
+    cache_filename = hash_name + ".png"
+    cache_path = os.path.join(CACHE_DIR, cache_filename)
+    
+    # 如果缓存已存在，跳过
+    if os.path.exists(cache_path):
+        return True
 
     try:
         img = Image.open(image_path)
@@ -84,10 +104,16 @@ def get_cached_image_path(image_path):
         img.thumbnail(max_size)
         
         img.save(cache_path, "PNG")
-        return web_path
+        return True
     except Exception as e:
         print(f"[ImagePrompt] 图片缓存失败: {e}")
-        return None
+        return False
+
+def start_background_cache(image_path):
+    """启动后台线程创建缓存"""
+    thread = threading.Thread(target=create_image_cache, args=(image_path,), daemon=True)
+    thread.start()
+    return thread
 
 # 注册 API 路由 - 使用 PromptServer 实例
 
@@ -121,9 +147,11 @@ async def api_get_images(request):
                 file_path = os.path.join(image_dir, file)
                 file_url = get_cached_image_path(file_path)
 
-                # 如果缓存失败，使用原始路径
+                # 如果缓存不存在，使用原始路径并启动后台缓存
                 if not file_url:
                     file_url = f"/view?filename={file}&type=output"
+                    # 启动后台缓存（不阻塞 API 响应）
+                    start_background_cache(file_path)
 
                 tags = saved_data.get('tags', [])
                 # 确保 tags 是数组格式
