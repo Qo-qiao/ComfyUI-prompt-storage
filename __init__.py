@@ -48,4 +48,4 @@ def setup(app):
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY", "setup"]
 
 # 版本信息
-VERSION = "1.3.2"
+VERSION = "1.3.3"

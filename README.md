@@ -145,6 +145,10 @@ ComfyUI-prompt-storage is a feature-rich ComfyUI plugin designed to manage and s
 
 ## Changelog
 
+#### v1.3.3
+- Fixed the issue of Text Modifier node function, optimized input box names for better understanding and usage
+- Modified the preview image of Image Prompt Storage node to edge cache, solving the issue of long waiting time for multiple images, and may cause some performance issues
+
 #### v1.3.2
 - Adjusted the prompt selector style to match other nodes
 - Removed the style entry, please use the tags function instead
