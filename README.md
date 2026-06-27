@@ -149,6 +149,9 @@ ComfyUI-prompt-storage is a feature-rich ComfyUI plugin designed to manage and s
 - Fixed the issue of Text Modifier node function, optimized input box names for better understanding and usage
 - Modified the preview image of Image Prompt Storage node to edge cache, solving the issue of long waiting time for multiple images, and may cause some performance issues
 
+<details>
+<summary>📋 Historical Versions</summary>
+
 #### v1.3.2
 - Adjusted the prompt selector style to match other nodes
 - Removed the style entry, please use the tags function instead
@@ -190,6 +193,8 @@ ComfyUI-prompt-storage is a feature-rich ComfyUI plugin designed to manage and s
 - Displays positive and negative prompts associated with image files
 - Supports multi-select for positive prompts, single-select for negative prompts
 - Provides visual preview interface for image files
+
+</details>
 
 ## Acknowledgments
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI) @comfyanonymous

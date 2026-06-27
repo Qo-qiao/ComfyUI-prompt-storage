@@ -140,6 +140,9 @@ ComfyUI-prompt-storage 是一款功能丰富的 ComfyUI 插件，用于管理和
 - 修复文本修改器节点功能的错误，优化输入框名称，更好理解使用
 - 提示词存储器节点预览图修改为边缓存边加载，解决图片较多导致的等待时间长的问题，硬件低可能会造成些许运行卡顿
 
+<details>
+<summary>📋 历史版本</summary>
+
 #### v1.3.2
 - 调整提示词选择器样式，与其他节点保持统一
 - 移除风格条目，请使用标签功能代替
@@ -181,6 +184,8 @@ ComfyUI-prompt-storage 是一款功能丰富的 ComfyUI 插件，用于管理和
 - 显示与图像文件关联的正向和负向提示词
 - 支持多选正向提示词，单选负向提示词
 - 提供图像文件的视觉预览界面
+
+</details>
 
 ## 致谢
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI) @comfyanonymous
