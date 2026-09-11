@@ -648,16 +648,10 @@ export function createTemplateWidget(node, modelType, topOffset, stateManager) {
         
         stateManager?.saveSelection(item.name);
         
-        // 使用索引访问 widget（第二个 widget 是选中的模板内容）
-        const contentWidget = node.widgets?.[2];
+        // 使用名称访问 widget，将模板内容设置到 widget 中
+        const contentWidget = node.widgets?.find(w => w.name === '模板内容(Content)');
         if (contentWidget) {
             contentWidget.value = item.content || '';
-        }
-        
-        // 使用索引访问 widget（第一个 widget 是模板文件）
-        const templateFileWidget = node.widgets?.[1];
-        if (templateFileWidget) {
-            templateFileWidget.value = item.name;
         }
     };
 
